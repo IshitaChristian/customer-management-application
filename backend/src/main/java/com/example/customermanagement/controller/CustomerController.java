@@ -1,10 +1,10 @@
 package com.example.customermanagement.controller;
-
-
 import com.example.customermanagement.dto.CreateCustomerRequest;
 import com.example.customermanagement.dto.CustomerResponse;
 import com.example.customermanagement.entity.Customer;
 import com.example.customermanagement.service.CustomerService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,7 +20,8 @@ public class CustomerController {
     }
 
     @PostMapping
-    public CustomerResponse createCustomer(@RequestBody CreateCustomerRequest request){
+    @ResponseStatus(HttpStatus.CREATED)
+    public CustomerResponse createCustomer(@Valid @RequestBody CreateCustomerRequest request){
         Customer customer = customerService.createCustomer(
                 request.firstName(),
                 request.lastName(),

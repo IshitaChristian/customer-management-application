@@ -1,32 +1,18 @@
 package com.example.customermanagement.service;
 
-
 import com.example.customermanagement.entity.Customer;
-import com.example.customermanagement.repository.CustomerRepository;
-import org.springframework.stereotype.Service;
-import java.time.LocalDate;
+
 import java.util.List;
 
+public interface CustomerService {
 
-@Service
-public class CustomerService {
+    Customer createCustomer(
+            String firstName,
+            String lastName,
+            java.time.LocalDate dateOfBirth
+    );
 
-    private final CustomerRepository customerRepository;
+    List<Customer> getAllCustomers();
 
-    public CustomerService(CustomerRepository customerRepository) {
-        this.customerRepository = customerRepository;
-    }
-
-    public Customer createCustomer(String firstName, String lastName, LocalDate dateOfBirth){
-        Customer customer = new Customer(firstName, lastName, dateOfBirth);
-        return customerRepository.save(customer);
-    }
-
-    public List<Customer> getAllCustomers(){
-        return customerRepository.findAll();
-    }
-
-    public Customer getCustomerById(Long id){
-        return customerRepository.findById(id).orElseThrow();
-    }
+    Customer getCustomerById(Long id);
 }

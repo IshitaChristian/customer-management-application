@@ -10,7 +10,6 @@ import {
     Typography,
 } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/People'
-import SearchIcon from '@mui/icons-material/Search'
 
 const drawerWidth = 240
 
@@ -49,7 +48,8 @@ function AppShell() {
                     <List sx={{ px: 1 }}>
                         <ListItemButton
                             component={NavLink}
-                            to="/customers"
+                            to="/"
+                            end
                             sx={{
                                 mb: 0.5,
                                 borderRadius: 1,
@@ -69,26 +69,6 @@ function AppShell() {
                             <ListItemText primary="Customers" />
                         </ListItemButton>
 
-                        <ListItemButton
-                            component={NavLink}
-                            to="/customers/find"
-                            sx={{
-                                borderRadius: 1,
-                                '&.active': {
-                                    backgroundColor: 'action.selected',
-                                    color: 'primary.main',
-                                },
-                                '&.active .MuiListItemIcon-root': {
-                                    color: 'primary.main',
-                                },
-                            }}
-                        >
-                            <ListItemIcon>
-                                <SearchIcon />
-                            </ListItemIcon>
-
-                            <ListItemText primary="Find customer" />
-                        </ListItemButton>
                     </List>
 
                     <Box sx={{ mt: 'auto', p: 2 }}>

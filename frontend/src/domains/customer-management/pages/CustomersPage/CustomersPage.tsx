@@ -8,6 +8,7 @@ import {
     CircularProgress,
     Divider,
     IconButton,
+    Snackbar,
     Stack,
     Table,
     TableBody,
@@ -21,35 +22,45 @@ import {
     Tooltip,
     Typography,
 } from '@mui/material'
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import MESSAGES from '../../../constants/messages'
-import { useCustomers } from '../hooks/useCustomers'
+import { useMemo, useState } from 'react'
+import AddCustomerDialog from '../../components/AddCustomerDialog/AddCustomerDialog'
+import { useCustomers } from '../../hooks/useCustomers'
+import {
+    ASCENDING,
+    CREATED_NOTIFICATION_DURATION_MS,
+    CUSTOMER_PAGE_COPY,
+    CUSTOMER_SORT_FIELD,
+    DEFAULT_PAGE_INDEX,
+    DEFAULT_ROWS_PER_PAGE,
+    DEFAULT_SORT_DIRECTION,
+    DESCENDING,
+    INITIAL_FILTER_VALUE,
+    ROWS_PER_PAGE_OPTIONS,
+    type CustomerSortField,
+    type SortDirection,
+} from './CustomersPage.constants'
 
-type SortField =
-    | 'id'
-    | 'firstName'
-    | 'lastName'
-    | 'dateOfBirth'
+function CustomersPage() {
+    const [isAddDialogOpen, setIsAddDialogOpen] =
+        useState(false)
+    const [showCreatedMessage, setShowCreatedMessage] =
+        useState(false)
 
-type SortDirection = 'asc' | 'desc'
-
-function Customers() {
-    const navigate = useNavigate()
-
-    const [idFilter, setIdFilter] = useState('')
+    const [idFilter, setIdFilter] = useState(INITIAL_FILTER_VALUE)
     const [firstNameFilter, setFirstNameFilter] =
-        useState('')
+        useState(INITIAL_FILTER_VALUE)
     const [lastNameFilter, setLastNameFilter] =
-        useState('')
+        useState(INITIAL_FILTER_VALUE)
 
-    const [page, setPage] = useState(0)
-    const [rowsPerPage, setRowsPerPage] = useState(15)
+    const [page, setPage] = useState(DEFAULT_PAGE_INDEX)
+    const [rowsPerPage, setRowsPerPage] = useState(
+        DEFAULT_ROWS_PER_PAGE,
+    )
 
     const [sortField, setSortField] =
-        useState<SortField | null>(null)
+        useState<CustomerSortField | null>(null)
     const [sortDirection, setSortDirection] =
-        useState<SortDirection>('asc')
+        useState<SortDirection>(DEFAULT_SORT_DIRECTION)
 
     const {
         data: customers,
@@ -95,16 +106,18 @@ function Customers() {
         lastNameFilter,
     ])
 
-    const handleSort = (field: SortField) => {
+    const handleSort = (field: CustomerSortField) => {
+        setPage(DEFAULT_PAGE_INDEX)
+
         if (sortField === field) {
             setSortDirection((current) =>
-                current === 'asc' ? 'desc' : 'asc',
+                current === ASCENDING ? DESCENDING : ASCENDING,
             )
             return
         }
 
         setSortField(field)
-        setSortDirection('asc')
+        setSortDirection(DEFAULT_SORT_DIRECTION)
     }
 
     const sortedCustomers = useMemo(() => {
@@ -133,23 +146,12 @@ function Customers() {
                         },
                     )
 
-            return sortDirection === 'asc'
+            return sortDirection === ASCENDING
                 ? comparison
                 : -comparison
         })
     }, [
         filteredCustomers,
-        sortField,
-        sortDirection,
-    ])
-
-    useEffect(() => {
-        setPage(0)
-    }, [
-        idFilter,
-        firstNameFilter,
-        lastNameFilter,
-        rowsPerPage,
         sortField,
         sortDirection,
     ])
@@ -169,9 +171,10 @@ function Customers() {
     ])
 
     const clearFilters = () => {
-        setIdFilter('')
-        setFirstNameFilter('')
-        setLastNameFilter('')
+        setPage(DEFAULT_PAGE_INDEX)
+        setIdFilter(INITIAL_FILTER_VALUE)
+        setFirstNameFilter(INITIAL_FILTER_VALUE)
+        setLastNameFilter(INITIAL_FILTER_VALUE)
     }
 
     if (isLoading) {
@@ -197,21 +200,21 @@ function Customers() {
                         variant="h4"
                         sx={{ fontWeight: 700 }}
                     >
-                        Customers
+                        {CUSTOMER_PAGE_COPY.title}
                     </Typography>
 
                     <Typography
                         color="text.secondary"
                         sx={{ mt: 1 }}
                     >
-                        Manage your customer records in one place.
+                        {CUSTOMER_PAGE_COPY.description}
                     </Typography>
                 </Box>
 
                 <Alert severity="error">
                     {error instanceof Error
                         ? error.message
-                        : MESSAGES.customers.unableToLoad}
+                        : CUSTOMER_PAGE_COPY.unableToLoad}
                 </Alert>
 
                 <Box>
@@ -220,7 +223,7 @@ function Customers() {
                         startIcon={<Refresh />}
                         onClick={() => refetch()}
                     >
-                        Try again
+                        {CUSTOMER_PAGE_COPY.retryLoad}
                     </Button>
                 </Box>
             </Stack>
@@ -242,7 +245,7 @@ function Customers() {
                         variant="h4"
                         sx={{ fontWeight: 700 }}
                     >
-                        Customers
+                        {CUSTOMER_PAGE_COPY.title}
                     </Typography>
 
                     <Typography
@@ -252,15 +255,13 @@ function Customers() {
                             fontSize: '0.95rem',
                         }}
                     >
-                        Manage your customer records in one place.
+                        {CUSTOMER_PAGE_COPY.description}
                     </Typography>
                 </Box>
 
                 <Button
                     variant="contained"
-                    onClick={() =>
-                        navigate('/customers/new')
-                    }
+                    onClick={() => setIsAddDialogOpen(true)}
                     sx={{
                         px: 2.75,
                         py: 1.1,
@@ -270,7 +271,7 @@ function Customers() {
                             '0 4px 12px rgba(25, 118, 210, 0.18)',
                     }}
                 >
-                    Add Customer
+                    {CUSTOMER_PAGE_COPY.addCustomer}
                 </Button>
             </Box>
 
@@ -287,7 +288,7 @@ function Customers() {
                                 variant="h6"
                                 sx={{ fontWeight: 650 }}
                             >
-                                No customers yet
+                                {CUSTOMER_PAGE_COPY.emptyTitle}
                             </Typography>
 
                             <Typography
@@ -295,17 +296,17 @@ function Customers() {
                                 color="text.secondary"
                                 sx={{ mt: 1 }}
                             >
-                                Add your first customer to get started.
+                                {CUSTOMER_PAGE_COPY.emptyDescription}
                             </Typography>
 
                             <Button
                                 variant="contained"
                                 sx={{ mt: 3 }}
                                 onClick={() =>
-                                    navigate('/customers/new')
+                                    setIsAddDialogOpen(true)
                                 }
                             >
-                                Add Customer
+                                {CUSTOMER_PAGE_COPY.addCustomer}
                             </Button>
                         </Box>
                     </CardContent>
@@ -354,7 +355,7 @@ function Customers() {
                                     lineHeight: 1.4,
                                 }}
                             >
-                                Total number of customers
+                                {CUSTOMER_PAGE_COPY.totalCustomers}
                             </Typography>
 
                             <Typography
@@ -395,7 +396,7 @@ function Customers() {
                                 variant="h6"
                                 sx={{ fontWeight: 650 }}
                             >
-                                Customers
+                                {CUSTOMER_PAGE_COPY.title}
                             </Typography>
 
                             {hasActiveFilters && (
@@ -403,7 +404,7 @@ function Customers() {
                                     size="small"
                                     onClick={clearFilters}
                                 >
-                                    Clear filters
+                                    {CUSTOMER_PAGE_COPY.clearFilters}
                                 </Button>
                             )}
                         </Box>
@@ -438,14 +439,14 @@ function Customers() {
                                                     }}
                                                 >
                                                     <TableSortLabel
-                                                        active={sortField === 'id'}
+                                                        active={sortField === CUSTOMER_SORT_FIELD.ID}
                                                         direction={
-                                                            sortField === 'id'
+                                                            sortField === CUSTOMER_SORT_FIELD.ID
                                                                 ? sortDirection
-                                                                : 'asc'
+                                                                : DEFAULT_SORT_DIRECTION
                                                         }
                                                         onClick={() =>
-                                                            handleSort('id')
+                                                            handleSort(CUSTOMER_SORT_FIELD.ID)
                                                         }
                                                     >
                                                         <Typography
@@ -454,21 +455,22 @@ function Customers() {
                                                                 fontSize: '0.95rem',
                                                             }}
                                                         >
-                                                            ID
+                                                            {CUSTOMER_PAGE_COPY.customerIdColumn}
                                                         </Typography>
                                                     </TableSortLabel>
                                                 </Box>
 
                                                 <TextField
                                                     value={idFilter}
-                                                    onChange={(event) =>
+                                                    onChange={(event) => {
+                                                        setPage(DEFAULT_PAGE_INDEX)
                                                         setIdFilter(
                                                             event.target.value,
                                                         )
-                                                    }
+                                                    }}
                                                     size="small"
                                                     type="number"
-                                                    placeholder="Filter"
+                                                    placeholder={CUSTOMER_PAGE_COPY.filterPlaceholder}
                                                     fullWidth
                                                 />
                                             </Stack>
@@ -491,15 +493,15 @@ function Customers() {
                                                 >
                                                     <TableSortLabel
                                                         active={
-                                                            sortField === 'firstName'
+                                                            sortField === CUSTOMER_SORT_FIELD.FIRST_NAME
                                                         }
                                                         direction={
-                                                            sortField === 'firstName'
+                                                            sortField === CUSTOMER_SORT_FIELD.FIRST_NAME
                                                                 ? sortDirection
-                                                                : 'asc'
+                                                                : DEFAULT_SORT_DIRECTION
                                                         }
                                                         onClick={() =>
-                                                            handleSort('firstName')
+                                                            handleSort(CUSTOMER_SORT_FIELD.FIRST_NAME)
                                                         }
                                                     >
                                                         <Typography
@@ -508,20 +510,21 @@ function Customers() {
                                                                 fontSize: '0.95rem',
                                                             }}
                                                         >
-                                                            First name
+                                                            {CUSTOMER_PAGE_COPY.firstNameColumn}
                                                         </Typography>
                                                     </TableSortLabel>
                                                 </Box>
 
                                                 <TextField
                                                     value={firstNameFilter}
-                                                    onChange={(event) =>
+                                                    onChange={(event) => {
+                                                        setPage(DEFAULT_PAGE_INDEX)
                                                         setFirstNameFilter(
                                                             event.target.value,
                                                         )
-                                                    }
+                                                    }}
                                                     size="small"
-                                                    placeholder="Filter"
+                                                    placeholder={CUSTOMER_PAGE_COPY.filterPlaceholder}
                                                     fullWidth
                                                 />
                                             </Stack>
@@ -544,15 +547,15 @@ function Customers() {
                                                 >
                                                     <TableSortLabel
                                                         active={
-                                                            sortField === 'lastName'
+                                                            sortField === CUSTOMER_SORT_FIELD.LAST_NAME
                                                         }
                                                         direction={
-                                                            sortField === 'lastName'
+                                                            sortField === CUSTOMER_SORT_FIELD.LAST_NAME
                                                                 ? sortDirection
-                                                                : 'asc'
+                                                                : DEFAULT_SORT_DIRECTION
                                                         }
                                                         onClick={() =>
-                                                            handleSort('lastName')
+                                                            handleSort(CUSTOMER_SORT_FIELD.LAST_NAME)
                                                         }
                                                     >
                                                         <Typography
@@ -561,20 +564,21 @@ function Customers() {
                                                                 fontSize: '0.95rem',
                                                             }}
                                                         >
-                                                            Last name
+                                                            {CUSTOMER_PAGE_COPY.lastNameColumn}
                                                         </Typography>
                                                     </TableSortLabel>
                                                 </Box>
 
                                                 <TextField
                                                     value={lastNameFilter}
-                                                    onChange={(event) =>
+                                                    onChange={(event) => {
+                                                        setPage(DEFAULT_PAGE_INDEX)
                                                         setLastNameFilter(
                                                             event.target.value,
                                                         )
-                                                    }
+                                                    }}
                                                     size="small"
-                                                    placeholder="Filter"
+                                                    placeholder={CUSTOMER_PAGE_COPY.filterPlaceholder}
                                                     fullWidth
                                                 />
                                             </Stack>
@@ -597,15 +601,15 @@ function Customers() {
                                                 >
                                                     <TableSortLabel
                                                         active={
-                                                            sortField === 'dateOfBirth'
+                                                            sortField === CUSTOMER_SORT_FIELD.DATE_OF_BIRTH
                                                         }
                                                         direction={
-                                                            sortField === 'dateOfBirth'
+                                                            sortField === CUSTOMER_SORT_FIELD.DATE_OF_BIRTH
                                                                 ? sortDirection
-                                                                : 'asc'
+                                                                : DEFAULT_SORT_DIRECTION
                                                         }
                                                         onClick={() =>
-                                                            handleSort('dateOfBirth')
+                                                            handleSort(CUSTOMER_SORT_FIELD.DATE_OF_BIRTH)
                                                         }
                                                     >
                                                         <Typography
@@ -614,7 +618,7 @@ function Customers() {
                                                                 fontSize: '0.95rem',
                                                             }}
                                                         >
-                                                            Date of birth
+                                                            {CUSTOMER_PAGE_COPY.dateOfBirthColumn}
                                                         </Typography>
                                                     </TableSortLabel>
                                                 </Box>
@@ -630,13 +634,7 @@ function Customers() {
                                         <TableRow
                                             key={customer.id}
                                             hover
-                                            onClick={() =>
-                                                navigate(
-                                                    `/customers/${customer.id}`,
-                                                )
-                                            }
                                             sx={{
-                                                cursor: 'pointer',
                                                 '&:last-child td': {
                                                     borderBottom: 0,
                                                 },
@@ -676,7 +674,7 @@ function Customers() {
                                                         variant="subtitle1"
                                                         sx={{ fontWeight: 600 }}
                                                     >
-                                                        No customers found
+                                                        {CUSTOMER_PAGE_COPY.noCustomersFound}
                                                     </Typography>
 
                                                     <Typography
@@ -684,7 +682,7 @@ function Customers() {
                                                         color="text.secondary"
                                                         sx={{ mt: 0.5 }}
                                                     >
-                                                        Try adjusting your filters.
+                                                        {CUSTOMER_PAGE_COPY.adjustFilters}
                                                     </Typography>
 
                                                     <Button
@@ -692,7 +690,7 @@ function Customers() {
                                                         sx={{ mt: 2 }}
                                                         onClick={clearFilters}
                                                     >
-                                                        Clear filters
+                                                        {CUSTOMER_PAGE_COPY.clearFilters}
                                                     </Button>
                                                 </Box>
                                             </TableCell>
@@ -712,10 +710,10 @@ function Customers() {
                                 px: 1,
                             }}
                         >
-                            <Tooltip title="Refresh customers">
+                            <Tooltip title={CUSTOMER_PAGE_COPY.refreshCustomers}>
                                 <IconButton
                                     onClick={() => refetch()}
-                                    aria-label="Refresh customers"
+                                    aria-label={CUSTOMER_PAGE_COPY.refreshCustomers}
                                 >
                                     <Refresh />
                                 </IconButton>
@@ -730,23 +728,42 @@ function Customers() {
                                 }
                                 rowsPerPage={rowsPerPage}
                                 onRowsPerPageChange={(event) => {
+                                    setPage(DEFAULT_PAGE_INDEX)
                                     setRowsPerPage(
                                         Number(event.target.value),
                                     )
                                 }}
-                                rowsPerPageOptions={[
-                                    10,
-                                    15,
-                                    25,
-                                    50,
-                                ]}
+                                rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
                             />
                         </Box>
                     </Card>
                 </>
             )}
+            <AddCustomerDialog
+                open={isAddDialogOpen}
+                onClose={() => setIsAddDialogOpen(false)}
+                onCreated={() => setShowCreatedMessage(true)}
+            />
+
+            <Snackbar
+                open={showCreatedMessage}
+                autoHideDuration={CREATED_NOTIFICATION_DURATION_MS}
+                onClose={() => setShowCreatedMessage(false)}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+            >
+                <Alert
+                    severity="success"
+                    onClose={() => setShowCreatedMessage(false)}
+                    variant="filled"
+                >
+                    {CUSTOMER_PAGE_COPY.addedSuccessfully}
+                </Alert>
+            </Snackbar>
         </Stack>
     )
 }
 
-export default Customers
+export default CustomersPage

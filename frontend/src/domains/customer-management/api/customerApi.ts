@@ -1,4 +1,4 @@
-import apiClient from '../../../services/apiClient'
+import apiClient from '../../../shared/api/apiClient'
 import type {
   CreateCustomerRequest,
   Customer,
@@ -12,14 +12,6 @@ export async function getCustomers(): Promise<Customer[]> {
   )
 
   return response.data
-}
-
-export async function getCustomer(id: number): Promise<Customer> {
-  const response = await apiClient.get<Customer>(
-    `${CUSTOMER_ENDPOINT}/${id}`,
-)
-
-return response.data
 }
 
 export async function createCustomer(

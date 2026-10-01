@@ -6,13 +6,11 @@ import {
 import {
   createCustomer,
   getCustomers,
-} from '../services/customerApi'
+} from '../api/customerApi'
 
 export const customerKeys = {
   all: ['customers'] as const,
   list: () => [...customerKeys.all, 'list'] as const,
-  detail: (id: number) =>
-    [...customerKeys.all, 'detail', id] as const,
 }
 
 export function useCustomers() {

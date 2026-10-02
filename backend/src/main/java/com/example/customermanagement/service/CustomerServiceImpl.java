@@ -3,7 +3,9 @@ package com.example.customermanagement.service;
 import com.example.customermanagement.entity.Customer;
 import com.example.customermanagement.exception.CustomerNotFoundException;
 import com.example.customermanagement.repository.CustomerRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -18,6 +20,7 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional
     public Customer createCustomer(
             String firstName,
             String lastName,
@@ -33,11 +36,13 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Customer> getAllCustomers() {
-        return customerRepository.findAll();
+        return customerRepository.findAll(Sort.by(Sort.Direction.ASC, "id"));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Customer getCustomerById(Long id) {
         return customerRepository.findById(id)
                 .orElseThrow(() -> new CustomerNotFoundException(id));

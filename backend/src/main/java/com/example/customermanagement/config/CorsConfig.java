@@ -19,6 +19,11 @@ public class CorsConfig implements WebMvcConfigurer {
                         "GET",
                         "POST",
                         "OPTIONS"
-                );
+                )
+                .allowedHeaders(
+                        "Content-Type",
+                        "X-CSRF-TOKEN"
+                )
+                .allowCredentials(true);
     }
 }

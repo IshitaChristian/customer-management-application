@@ -4,11 +4,13 @@ import { CUSTOMER_PAGE_COPY } from '../../pages/CustomersPage/CustomersPage.cons
 interface CustomersHeaderProps {
     customerCount: number
     onAddCustomer: () => void
+    canManageCustomers: boolean
 }
 
 function CustomersHeader({
     customerCount,
     onAddCustomer,
+    canManageCustomers,
 }: CustomersHeaderProps) {
     return (
         <>
@@ -32,19 +34,21 @@ function CustomersHeader({
                         {CUSTOMER_PAGE_COPY.description}
                     </Typography>
                 </Box>
-                <Button
-                    variant="contained"
-                    onClick={onAddCustomer}
-                    sx={{
-                        px: 2.75,
-                        py: 1.1,
-                        mt: 0.25,
-                        fontWeight: 600,
-                        boxShadow: '0 4px 12px rgba(25, 118, 210, 0.18)',
-                    }}
-                >
-                    {CUSTOMER_PAGE_COPY.addCustomer}
-                </Button>
+                {canManageCustomers && (
+                    <Button
+                        variant="contained"
+                        onClick={onAddCustomer}
+                        sx={{
+                            px: 2.75,
+                            py: 1.1,
+                            mt: 0.25,
+                            fontWeight: 600,
+                            boxShadow: '0 4px 12px rgba(25, 118, 210, 0.18)',
+                        }}
+                    >
+                        {CUSTOMER_PAGE_COPY.addCustomer}
+                    </Button>
+                )}
             </Box>
             <Card
                 variant="outlined"

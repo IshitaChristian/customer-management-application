@@ -16,12 +16,4 @@ export const CUSTOMER_COLUMN_DEFS: ColDef<Customer>[] = [
     },
     { field: 'firstName', headerName: 'First name', minWidth: 180 },
     { field: 'lastName', headerName: 'Last name', minWidth: 180 },
-    {
-        field: 'dateOfBirth',
-        headerName: 'Date of birth',
-        cellDataType: 'dateString',
-        filter: false,
-        floatingFilter: false,
-        minWidth: 180,
-    },
 ]

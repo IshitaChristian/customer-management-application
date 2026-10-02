@@ -1,6 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import {
     Box,
+    Button,
     Drawer,
     List,
     ListItemButton,
@@ -10,10 +11,20 @@ import {
     Typography,
 } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/People'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../shared/auth/AuthProvider'
 
 const drawerWidth = 240
 
 function AppShell() {
+    const { user, logout } = useAuth()
+    const navigate = useNavigate()
+
+    const handleLogout = async () => {
+        await logout()
+        navigate('/login', { replace: true })
+    }
+
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh' }}>
             <Drawer
@@ -72,9 +83,16 @@ function AppShell() {
                     </List>
 
                     <Box sx={{ mt: 'auto', p: 2 }}>
+                        <Typography variant="body2" sx={{ mb: 1 }}>
+                            {user?.username} ({user?.role})
+                        </Typography>
+                        <Button fullWidth variant="outlined" onClick={handleLogout}>
+                            Log out
+                        </Button>
                         <Typography
                             variant="body2"
                             color="success.main"
+                            sx={{ mt: 2 }}
                         >
                             ● System connected
                         </Typography>

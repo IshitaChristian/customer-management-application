@@ -1,6 +1,7 @@
 package com.example.customermanagement.exception;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -15,7 +16,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomerNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleCustomerNotFoundException(CustomerNotFoundException exception){
+    public ErrorResponse handleCustomerNotFoundException(
+            CustomerNotFoundException exception
+    ) {
         return new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 exception.getMessage()
@@ -26,7 +29,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationErrors(
             MethodArgumentNotValidException exception
-    ){
+    ) {
         Map<String, String> errors = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -39,6 +42,15 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(),
                 "Validation failed",
                 errors
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleUnreadableRequestBody() {
+        return new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Invalid request body"
         );
     }
 }

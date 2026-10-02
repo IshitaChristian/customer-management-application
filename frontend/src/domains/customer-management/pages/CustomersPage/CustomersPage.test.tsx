@@ -6,19 +6,26 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CustomersPage from './CustomersPage'
 
-const { mockUseCustomers, mockRefetch, mockCreateCustomer } = vi.hoisted(() => ({
+const {
+  mockUseCustomers,
+  mockRefetch,
+  mockCreateCustomer,
+  mockUseAuth,
+} = vi.hoisted(() => ({
   mockUseCustomers: vi.fn(),
   mockRefetch: vi.fn(),
   mockCreateCustomer: vi.fn(),
+  mockUseAuth: vi.fn(),
 }))
 
 vi.mock('../../components/CustomerList/CustomerList', () => ({
-  default: ({ customers, onAddCustomer }: {
+  default: ({ customers, onAddCustomer, canManageCustomers }: {
     customers: unknown[]
     onAddCustomer: () => void
+    canManageCustomers: boolean
   }) => (
     <div data-testid="customer-list">
-      {customers.length === 0 && (
+      {customers.length === 0 && canManageCustomers && (
         <button onClick={onAddCustomer}>Add Customer</button>
       )}
     </div>
@@ -31,6 +38,10 @@ vi.mock('../../hooks/useCustomers', () => ({
 
 vi.mock('../../api/customerApi', () => ({
   createCustomer: mockCreateCustomer,
+}))
+
+vi.mock('../../../../shared/auth/AuthProvider', () => ({
+  useAuth: mockUseAuth,
 }))
 
 vi.mock('@mui/x-date-pickers/DatePicker', () => ({
@@ -70,6 +81,9 @@ describe('CustomersPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockCreateCustomer.mockResolvedValue({})
+    mockUseAuth.mockReturnValue({
+      user: { username: 'admin', role: 'ADMIN' },
+    })
     mockUseCustomers.mockReturnValue({
       data: [],
       isLoading: false,
@@ -126,6 +140,19 @@ describe('CustomersPage', () => {
     expect(
       await screen.findByTestId('customer-list'),
     ).toBeInTheDocument()
+  })
+
+  it('hides add-customer actions for a USER', () => {
+    mockUseAuth.mockReturnValue({
+      user: { username: 'user', role: 'USER' },
+    })
+    renderCustomersPage()
+
+    expect(
+      screen.queryByRole('button', { name: 'Add Customer' }),
+    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: 'Add customer' }))
+      .not.toBeInTheDocument()
   })
 
   it('refreshes customers after creating a customer', async () => {

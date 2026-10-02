@@ -1,11 +1,19 @@
 package com.example.customermanagement.controller;
+
 import com.example.customermanagement.dto.CreateCustomerRequest;
 import com.example.customermanagement.dto.CustomerResponse;
 import com.example.customermanagement.entity.Customer;
 import com.example.customermanagement.service.CustomerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -20,8 +28,11 @@ public class CustomerController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    public CustomerResponse createCustomer(@Valid @RequestBody CreateCustomerRequest request){
+    public CustomerResponse createCustomer(
+            @Valid @RequestBody CreateCustomerRequest request
+    ) {
         Customer customer = customerService.createCustomer(
                 request.firstName(),
                 request.lastName(),
@@ -31,7 +42,8 @@ public class CustomerController {
     }
 
     @GetMapping
-    public List<CustomerResponse> getAllCustomers(){
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public List<CustomerResponse> getAllCustomers() {
         return customerService.getAllCustomers()
                 .stream()
                 .map(CustomerResponse::from)
@@ -39,7 +51,8 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
-    public CustomerResponse getCustomerById(@PathVariable Long id){
+    @PreAuthorize("hasRole('ADMIN')")
+    public CustomerResponse getCustomerById(@PathVariable Long id) {
         Customer customer = customerService.getCustomerById(id);
         return CustomerResponse.from(customer);
     }

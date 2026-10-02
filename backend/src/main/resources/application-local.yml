@@ -1,0 +1,14 @@
+app:
+  security:
+    user:
+      username: ${APP_SECURITY_USER_USERNAME:user}
+      password: ${APP_SECURITY_USER_PASSWORD:user123}
+    admin:
+      username: ${APP_SECURITY_ADMIN_USERNAME:admin}
+      password: ${APP_SECURITY_ADMIN_PASSWORD:admin123}
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false

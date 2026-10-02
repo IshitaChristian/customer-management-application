@@ -10,6 +10,7 @@ describe('CustomersHeader', () => {
             <CustomersHeader
                 customerCount={12}
                 onAddCustomer={onAddCustomer}
+                canManageCustomers
             />,
         )
 
@@ -23,5 +24,19 @@ describe('CustomersHeader', () => {
 
         fireEvent.click(screen.getByRole('button', { name: 'Add Customer' }))
         expect(onAddCustomer).toHaveBeenCalledOnce()
+    })
+
+    it('hides the add action when the user cannot manage customers', () => {
+        render(
+            <CustomersHeader
+                customerCount={1}
+                onAddCustomer={vi.fn()}
+                canManageCustomers={false}
+            />,
+        )
+
+        expect(
+            screen.queryByRole('button', { name: 'Add Customer' }),
+        ).not.toBeInTheDocument()
     })
 })

@@ -4,13 +4,16 @@ import {
     Button,
     Card,
     CardContent,
+    Dialog,
+    DialogContent,
+    DialogTitle,
     IconButton,
     Stack,
     Tooltip,
     Typography,
 } from '@mui/material'
-import type { FilterChangedEvent, GridApi } from 'ag-grid-community'
-import { useCallback, useRef, useState } from 'react'
+import type { ColDef, FilterChangedEvent, GridApi, ICellRendererParams } from 'ag-grid-community'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import type { Customer } from '../../types/customer'
 import CustomerAppGrid from '../../../../shared/components/CustomerAppGrid/CustomerAppGrid'
 import { CUSTOMER_PAGE_COPY } from '../../pages/CustomersPage/CustomersPage.constants'
@@ -25,15 +28,37 @@ interface CustomerListProps {
     customers: Customer[]
     onAddCustomer: () => void
     onRefresh: () => void
+    canManageCustomers: boolean
 }
 
 function CustomerList({
     customers,
     onAddCustomer,
     onRefresh,
+    canManageCustomers,
 }: CustomerListProps) {
     const gridApiRef = useRef<GridApi<Customer> | null>(null)
     const [hasActiveFilters, setHasActiveFilters] = useState(false)
+    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+
+    const columnDefs = useMemo<ColDef<Customer>[]>(() => [
+        ...CUSTOMER_COLUMN_DEFS,
+        ...(canManageCustomers ? [{
+            headerName: 'Actions',
+            sortable: false,
+            filter: false,
+            width: 160,
+            cellRenderer: (params: ICellRendererParams<Customer>) =>
+                params.data ? (
+                    <Button
+                        size="small"
+                        onClick={() => setSelectedCustomer(params.data ?? null)}
+                    >
+                        View Details
+                    </Button>
+                ) : null,
+        }] : []),
+    ], [canManageCustomers])
 
     const handleFilterChanged = useCallback(
         (event: FilterChangedEvent<Customer>) => {
@@ -62,13 +87,15 @@ function CustomerList({
                         >
                             {CUSTOMER_PAGE_COPY.emptyDescription}
                         </Typography>
-                        <Button
-                            variant="contained"
-                            sx={{ mt: 3 }}
-                            onClick={onAddCustomer}
-                        >
-                            {CUSTOMER_PAGE_COPY.addCustomer}
-                        </Button>
+                        {canManageCustomers && (
+                            <Button
+                                variant="contained"
+                                sx={{ mt: 3 }}
+                                onClick={onAddCustomer}
+                            >
+                                {CUSTOMER_PAGE_COPY.addCustomer}
+                            </Button>
+                        )}
                     </Box>
                 </CardContent>
             </Card>
@@ -116,7 +143,7 @@ function CustomerList({
             </Box>
             <CustomerAppGrid
                 rowData={customers}
-                columnDefs={CUSTOMER_COLUMN_DEFS}
+                columnDefs={columnDefs}
                 paginationPageSize={DEFAULT_ROWS_PER_PAGE}
                 paginationPageSizeSelector={ROWS_PER_PAGE_OPTIONS}
                 getRowId={(customer) => customer.id.toString()}
@@ -126,6 +153,27 @@ function CustomerList({
                 }}
                 onFilterChanged={handleFilterChanged}
             />
+            <Dialog
+                open={selectedCustomer !== null}
+                onClose={() => setSelectedCustomer(null)}
+                fullWidth
+                maxWidth="sm"
+            >
+                <DialogTitle>Customer details</DialogTitle>
+                <DialogContent dividers>
+                    {selectedCustomer && (
+                        <Stack spacing={1}>
+                            <Typography>ID: {selectedCustomer.id}</Typography>
+                            <Typography>
+                                Name: {selectedCustomer.firstName} {selectedCustomer.lastName}
+                            </Typography>
+                            <Typography>
+                                Date of birth: {selectedCustomer.dateOfBirth}
+                            </Typography>
+                        </Stack>
+                    )}
+                </DialogContent>
+            </Dialog>
         </Card>
     )
 }

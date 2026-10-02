@@ -8,6 +8,7 @@ import {
     Stack,
 } from '@mui/material'
 import { lazy, Suspense, useState } from 'react'
+import { useAuth } from '../../../../shared/auth/AuthProvider'
 import AddCustomerDialog from '../../components/AddCustomerDialog/AddCustomerDialog'
 import CustomersHeader from '../../components/CustomersHeader/CustomersHeader'
 import { useCustomers } from '../../hooks/useCustomers'
@@ -21,6 +22,8 @@ const CustomerList = lazy(
 )
 
 function CustomersPage() {
+    const { user } = useAuth()
+    const canManageCustomers = user?.role === 'ADMIN'
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
     const [showCreatedMessage, setShowCreatedMessage] = useState(false)
     const {
@@ -48,6 +51,7 @@ function CustomersPage() {
                     <CustomersHeader
                         customerCount={customers.length}
                         onAddCustomer={() => setIsAddDialogOpen(true)}
+                        canManageCustomers={canManageCustomers}
                     />
                     <Alert severity="error">
                         {error instanceof Error
@@ -68,6 +72,7 @@ function CustomersPage() {
                     <CustomersHeader
                         customerCount={customers.length}
                         onAddCustomer={() => setIsAddDialogOpen(true)}
+                        canManageCustomers={canManageCustomers}
                     />
                     <Suspense
                         fallback={
@@ -88,18 +93,21 @@ function CustomersPage() {
                             customers={customers}
                             onAddCustomer={() => setIsAddDialogOpen(true)}
                             onRefresh={() => refetch()}
+                            canManageCustomers={canManageCustomers}
                         />
                     </Suspense>
                 </Stack>
             )}
-            <AddCustomerDialog
-                open={isAddDialogOpen}
-                onClose={() => setIsAddDialogOpen(false)}
-                onCreated={() => {
-                    refetch()
-                    setShowCreatedMessage(true)
-                }}
-            />
+            {canManageCustomers && (
+                <AddCustomerDialog
+                    open={isAddDialogOpen}
+                    onClose={() => setIsAddDialogOpen(false)}
+                    onCreated={() => {
+                        refetch()
+                        setShowCreatedMessage(true)
+                    }}
+                />
+            )}
             <Snackbar
                 open={showCreatedMessage}
                 autoHideDuration={CREATED_NOTIFICATION_DURATION_MS}

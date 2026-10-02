@@ -1,6 +1,6 @@
 import { Box, CircularProgress } from '@mui/material'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import LoginPage from '../domains/auth/LoginPage'
+import LoginPage from '../domains/auth/pages/LoginPage/LoginPage'
 import AppShell from '../layouts/AppShell'
 import CustomersPage from '../domains/customer-management/pages/CustomersPage/CustomersPage'
 import { useAuth } from '../shared/auth/AuthProvider'

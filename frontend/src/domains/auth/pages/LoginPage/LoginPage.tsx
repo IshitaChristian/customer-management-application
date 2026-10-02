@@ -11,7 +11,11 @@ import {
     Typography,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../shared/auth/AuthProvider'
+import { useAuth } from '../../../../shared/auth/AuthProvider'
+import {
+    LOGIN_CARD_MAX_WIDTH,
+    LOGIN_PAGE_COPY,
+} from './LoginPage.constants'
 
 function LoginPage() {
     const { login } = useAuth()
@@ -29,7 +33,7 @@ function LoginPage() {
             await login(username, password)
             navigate('/customers', { replace: true })
         } catch {
-            setError('Unable to sign in. Check your username and password.')
+            setError(LOGIN_PAGE_COPY.authenticationFailed)
         } finally {
             setIsPending(false)
         }
@@ -45,20 +49,23 @@ function LoginPage() {
                 backgroundColor: 'background.default',
             }}
         >
-            <Card variant="outlined" sx={{ width: '100%', maxWidth: 420 }}>
+            <Card
+                variant="outlined"
+                sx={{ width: '100%', maxWidth: LOGIN_CARD_MAX_WIDTH }}
+            >
                 <CardContent sx={{ p: 4 }}>
                     <Stack spacing={3} component="form" onSubmit={handleSubmit}>
                         <Box>
                             <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                                Sign in
+                                {LOGIN_PAGE_COPY.title}
                             </Typography>
                             <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                                Customer Management Application
+                                {LOGIN_PAGE_COPY.description}
                             </Typography>
                         </Box>
                         {error && <Alert severity="error">{error}</Alert>}
                         <TextField
-                            label="Username"
+                            label={LOGIN_PAGE_COPY.username}
                             autoComplete="username"
                             value={username}
                             onChange={(event) => setUsername(event.target.value)}
@@ -66,7 +73,7 @@ function LoginPage() {
                             autoFocus
                         />
                         <TextField
-                            label="Password"
+                            label={LOGIN_PAGE_COPY.password}
                             type="password"
                             autoComplete="current-password"
                             value={password}
@@ -79,7 +86,7 @@ function LoginPage() {
                             disabled={isPending}
                             startIcon={isPending ? <CircularProgress size={16} /> : undefined}
                         >
-                            Sign in
+                            {LOGIN_PAGE_COPY.submit}
                         </Button>
                     </Stack>
                 </CardContent>

@@ -25,7 +25,7 @@ apiClient.interceptors.response.use(
         const isAuthenticationRequest = [
             '/api/v1/login',
             '/api/v1/logout',
-            '/api/v1/auth/me',
+            '/api/v1/auth',
         ].some((path) => url.endsWith(path))
         if (error.response?.status === 401 && !isAuthenticationRequest) {
             window.dispatchEvent(new Event(AUTHENTICATION_EXPIRED_EVENT))

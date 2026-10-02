@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthenticationController {
 
-    @GetMapping("/api/v1/auth/me")
+    @GetMapping("/api/v1/auth")
     public AuthenticatedUser currentUser(Authentication authentication) {
         String role = authentication.getAuthorities().stream()
                 .map(authority -> authority.getAuthority())

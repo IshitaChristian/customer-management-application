@@ -1,4 +1,4 @@
-import apiClient from '../api/apiClient'
+import apiClient from '../../../shared/api/apiClient'
 
 export type UserRole = 'USER' | 'ADMIN'
 
@@ -19,6 +19,6 @@ export async function logout(): Promise<void> {
 }
 
 export async function getCurrentUser(): Promise<AuthenticatedUser> {
-    const response = await apiClient.get<AuthenticatedUser>('/api/v1/auth/me')
+    const response = await apiClient.get<AuthenticatedUser>('/api/v1/auth')
     return response.data
 }

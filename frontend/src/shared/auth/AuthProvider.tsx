@@ -12,7 +12,7 @@ import {
     login as loginRequest,
     logout as logoutRequest,
     type AuthenticatedUser,
-} from './authService'
+} from '../../domains/auth/api/authService'
 import { AUTHENTICATION_EXPIRED_EVENT } from './authEvents'
 
 interface AuthContextValue {

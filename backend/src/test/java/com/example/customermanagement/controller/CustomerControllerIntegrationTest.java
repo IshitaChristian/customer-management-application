@@ -178,7 +178,7 @@ class CustomerControllerIntegrationTest {
         mockMvc.perform(get("/api/v1/customers"))
                 .andExpect(status().isUnauthorized());
 
-        mockMvc.perform(get("/api/v1/auth/me"))
+        mockMvc.perform(get("/api/v1/auth"))
                 .andExpect(status().isUnauthorized());
 
         mockMvc.perform(post("/api/v1/customers")
@@ -216,7 +216,7 @@ class CustomerControllerIntegrationTest {
                 .getSession(false);
         assertNotNull(session);
 
-        mockMvc.perform(get("/api/v1/auth/me").session(session))
+        mockMvc.perform(get("/api/v1/auth").session(session))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("user"))
                 .andExpect(jsonPath("$.role").value("USER"));
@@ -275,7 +275,7 @@ class CustomerControllerIntegrationTest {
 
     @Test
     void currentUserEndpointReturnsOnlyUsernameAndRole() throws Exception {
-        mockMvc.perform(get("/api/v1/auth/me")
+        mockMvc.perform(get("/api/v1/auth")
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("admin"))

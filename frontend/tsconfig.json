@@ -28,5 +28,5 @@
       "@testing-library/jest-dom"
     ]
   },
-  "include": ["src", "tests"]
+  "include": ["src", "setup.ts"]
 }

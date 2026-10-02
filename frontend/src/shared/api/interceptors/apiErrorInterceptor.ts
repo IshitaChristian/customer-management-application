@@ -5,10 +5,12 @@ import {
     type ApiErrorResponse,
 } from '../apiError'
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+    return value !== null && typeof value === 'object' && !Array.isArray(value)
+}
+
 function isErrorMap(value: unknown): value is Record<string, string> {
-    return value !== null
-        && typeof value === 'object'
-        && !Array.isArray(value)
+    return isRecord(value)
         && Object.values(value).every((item) => typeof item === 'string')
 }
 
@@ -16,25 +18,16 @@ export function handleApiError(
     error: AxiosError<ApiErrorResponse>,
 ): never {
     if (error.response) {
-        const responseData = error.response.data
-        const message =
-            responseData !== null
-                && typeof responseData === 'object'
-                && 'message' in responseData
-                && typeof responseData.message === 'string'
-                ? responseData.message
-                : MESSAGES.common.unexpectedError
-        const responseErrors =
-            responseData !== null
-                && typeof responseData === 'object'
-                && 'errors' in responseData
-                ? responseData.errors
-                : undefined
+        const responseData = isRecord(error.response.data)
+            ? error.response.data
+            : null
 
         throw new ApiError(
             error.response.status,
-            message,
-            isErrorMap(responseErrors) ? responseErrors : null,
+            typeof responseData?.message === 'string'
+                ? responseData.message
+                : MESSAGES.common.unexpectedError,
+            isErrorMap(responseData?.errors) ? responseData.errors : null,
         )
     }
 

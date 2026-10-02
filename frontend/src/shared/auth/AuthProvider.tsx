@@ -26,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         let active = true
+        setIsLoading(true)
 
         const handleExpiredAuthentication = () => {
             setUser(null)
@@ -69,7 +70,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }, [checkAttempt])
 
     const retryAuthenticationCheck = useCallback(() => {
-        setIsLoading(true)
         setAuthError(null)
         setCheckAttempt((attempt) => attempt + 1)
     }, [])

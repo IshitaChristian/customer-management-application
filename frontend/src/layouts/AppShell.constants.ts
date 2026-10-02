@@ -7,13 +7,13 @@ export const APP_SHELL_COPY = {
     subtitle: 'Management Portal',
     customers: 'Customers',
     logout: 'Log out',
-    systemStatus: '● System connected',
+    logoutFailed: 'Unable to log out. Please try again.',
 } as const
 
 export const APP_SHELL_NAVIGATION = [
     {
         label: APP_SHELL_COPY.customers,
-        to: '/',
+        to: '/customers',
         end: true,
         Icon: PeopleIcon,
     },

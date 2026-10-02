@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import LoginPage from '../domains/auth/pages/LoginPage/LoginPage'
 import AppShell from '../layouts/AppShell'
 import CustomersPage from '../domains/customer-management/pages/CustomersPage/CustomersPage'
-import { useAuth } from '../shared/auth/AuthProvider'
+import { useAuth } from '../shared/auth/useAuth'
 
 function AppRoutes() {
     const { user, isLoading } = useAuth()

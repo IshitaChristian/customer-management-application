@@ -106,7 +106,7 @@ describe('AddCustomerDialog', () => {
     expect(onClose).toHaveBeenCalledTimes(2)
   })
 
-  it('validates required fields and invalid names before submitting', async () => {
+  it('validates required fields and the backend name-length limit', async () => {
     const user = userEvent.setup()
     renderDialog()
 
@@ -116,21 +116,41 @@ describe('AddCustomerDialog', () => {
 
     expect(screen.getByText('First name is required')).toBeInTheDocument()
     expect(screen.getByText('Last name is required')).toBeInTheDocument()
+    expect(screen.getByText('Date of birth is required')).toBeInTheDocument()
     expect(mockCreateCustomer).not.toHaveBeenCalled()
 
-    await user.type(screen.getByLabelText('First name'), 'Jane123')
-    await user.type(screen.getByLabelText('Last name'), 'Doe123')
+    await user.type(screen.getByLabelText('First name'), 'J'.repeat(51))
+    await user.type(screen.getByLabelText('Last name'), 'Doe')
     await user.click(
       screen.getByRole('button', { name: 'Add customer' }),
     )
 
     expect(
-      screen.getByText('Please provide a valid first name'),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByText('Please provide a valid last name'),
+      screen.getByText('First name must be 50 characters or fewer'),
     ).toBeInTheDocument()
     expect(mockCreateCustomer).not.toHaveBeenCalled()
+  })
+
+  it('accepts names outside the Latin alphabet', async () => {
+    const user = userEvent.setup()
+    const { onCreated } = renderDialog()
+    await user.type(screen.getByLabelText('First name'), '李')
+    await user.type(screen.getByLabelText('Last name'), '王')
+    fireEvent.change(screen.getByLabelText('Date of birth'), {
+      target: { value: '1990-05-10' },
+    })
+    await user.click(
+      screen.getByRole('button', { name: 'Add customer' }),
+    )
+
+    await waitFor(() => {
+      expect(mockCreateCustomer).toHaveBeenCalledWith({
+        firstName: '李',
+        lastName: '王',
+        dateOfBirth: '1990-05-10',
+      })
+    })
+    expect(onCreated).toHaveBeenCalledOnce()
   })
 
   it('rejects a future date of birth', async () => {

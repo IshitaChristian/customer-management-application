@@ -11,7 +11,8 @@ import {
     Typography,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../../../shared/auth/AuthProvider'
+import { ApiError } from '../../../../shared/api/apiError'
+import { useAuth } from '../../../../shared/auth/useAuth'
 import {
     LOGIN_CARD_MAX_WIDTH,
     LOGIN_PAGE_COPY,
@@ -32,8 +33,14 @@ function LoginPage() {
         try {
             await login(username, password)
             navigate('/customers', { replace: true })
-        } catch {
-            setError(LOGIN_PAGE_COPY.authenticationFailed)
+        } catch (loginError: unknown) {
+            setError(
+                loginError instanceof ApiError && loginError.status === 401
+                    ? LOGIN_PAGE_COPY.authenticationFailed
+                    : loginError instanceof Error
+                        ? loginError.message
+                        : LOGIN_PAGE_COPY.signInUnavailable,
+            )
         } finally {
             setIsPending(false)
         }

@@ -2,18 +2,6 @@ import { useCallback, useEffect, useState } from 'react'
 import { getCustomers } from '../api/customerApi'
 import type { CustomerSummary } from '../types/customer'
 
-async function getCustomersWithRetry(signal: AbortSignal) {
-  try {
-    return await getCustomers(signal)
-  } catch (requestError: unknown) {
-    if (signal.aborted) {
-      throw requestError
-    }
-
-    return getCustomers(signal)
-  }
-}
-
 export function useCustomers() {
   const [data, setData] = useState<CustomerSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -27,7 +15,7 @@ export function useCustomers() {
   useEffect(() => {
     const controller = new AbortController()
 
-    getCustomersWithRetry(controller.signal)
+    getCustomers(controller.signal)
       .then((customers) => {
         setData(customers)
         setError(null)

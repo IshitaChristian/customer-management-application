@@ -8,7 +8,7 @@ import {
     Stack,
 } from '@mui/material'
 import { lazy, Suspense, useState } from 'react'
-import { useAuth } from '../../../../shared/auth/AuthProvider'
+import { useAuth } from '../../../../shared/auth/useAuth'
 import AddCustomerDialog from '../../components/AddCustomerDialog/AddCustomerDialog'
 import CustomersHeader from '../../components/CustomersHeader/CustomersHeader'
 import { useCustomers } from '../../hooks/useCustomers'

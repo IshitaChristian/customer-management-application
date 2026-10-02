@@ -41,7 +41,7 @@ vi.mock('../../api/customerApi', () => ({
   createCustomer: mockCreateCustomer,
 }))
 
-vi.mock('../../../../shared/auth/AuthProvider', () => ({
+vi.mock('../../../../shared/auth/useAuth', () => ({
   useAuth: mockUseAuth,
 }))
 

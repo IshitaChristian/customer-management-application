@@ -13,7 +13,7 @@ const { mockLogout } = vi.hoisted(() => ({
     mockLogout: vi.fn(),
 }))
 
-vi.mock('../shared/auth/AuthProvider', () => ({
+vi.mock('../shared/auth/useAuth', () => ({
     useAuth: () => ({
         user: { username: 'admin-user', role: 'ADMIN' },
         logout: mockLogout,
@@ -51,7 +51,7 @@ describe('AppShell', () => {
         renderAppShell()
 
         const customersLink = screen.getByRole('link', { name: 'Customers' })
-        expect(customersLink).toHaveAttribute('href', '/')
+        expect(customersLink).toHaveAttribute('href', '/customers')
         expect(screen.getByText('Customer page')).toBeInTheDocument()
         await user.click(customersLink)
         expect(screen.getByText('Customer page')).toBeInTheDocument()
@@ -65,5 +65,18 @@ describe('AppShell', () => {
 
         expect(mockLogout).toHaveBeenCalledOnce()
         expect(await screen.findByText('Login page')).toBeInTheDocument()
+    })
+
+    it('keeps the session UI and reports an error when logout fails', async () => {
+        const user = userEvent.setup()
+        mockLogout.mockRejectedValueOnce(new Error('Network error'))
+        renderAppShell()
+
+        await user.click(screen.getByRole('button', { name: 'Log out' }))
+
+        expect(await screen.findByRole('alert')).toHaveTextContent(
+            'Unable to log out. Please try again.',
+        )
+        expect(screen.getByText('Customer page')).toBeInTheDocument()
     })
 })

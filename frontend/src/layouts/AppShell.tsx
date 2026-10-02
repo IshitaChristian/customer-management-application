@@ -1,6 +1,8 @@
 import {
+    Alert,
     Box,
     Button,
+    CircularProgress,
     Drawer,
     List,
     ListItemButton,
@@ -9,8 +11,9 @@ import {
     Stack,
     Typography,
 } from '@mui/material'
+import { useState } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { useAuth } from '../shared/auth/AuthProvider'
+import { useAuth } from '../shared/auth/useAuth'
 import {
     APP_SHELL_COPY,
     APP_SHELL_DRAWER_WIDTH,
@@ -20,10 +23,20 @@ import {
 function AppShell() {
     const { user, logout } = useAuth()
     const navigate = useNavigate()
+    const [isLoggingOut, setIsLoggingOut] = useState(false)
+    const [logoutError, setLogoutError] = useState<string | null>(null)
 
     const handleLogout = async () => {
-        await logout()
-        navigate('/login', { replace: true })
+        setIsLoggingOut(true)
+        setLogoutError(null)
+        try {
+            await logout()
+            navigate('/login', { replace: true })
+        } catch {
+            setLogoutError(APP_SHELL_COPY.logoutFailed)
+        } finally {
+            setIsLoggingOut(false)
+        }
     }
 
     return (
@@ -57,51 +70,55 @@ function AppShell() {
                         </Typography>
                     </Box>
 
-                    <List sx={{ px: 1 }}>
-                        {APP_SHELL_NAVIGATION.map(({ label, to, end, Icon }) => (
-                            <ListItemButton
-                                key={to}
-                                component={NavLink}
-                                to={to}
-                                end={end}
-                                sx={{
-                                    mb: 0.5,
-                                    borderRadius: 1,
-                                    '&.active': {
-                                        backgroundColor: 'action.selected',
-                                        color: 'primary.main',
-                                    },
-                                    '&.active .MuiListItemIcon-root': {
-                                        color: 'primary.main',
-                                    },
-                                }}
-                            >
-                                <ListItemIcon>
-                                    <Icon />
-                                </ListItemIcon>
-                                <ListItemText primary={label} />
-                            </ListItemButton>
-                        ))}
-                    </List>
+                    <Box component="nav" aria-label="Main navigation">
+                        <List sx={{ px: 1 }}>
+                            {APP_SHELL_NAVIGATION.map(({ label, to, end, Icon }) => (
+                                <ListItemButton
+                                    key={to}
+                                    component={NavLink}
+                                    to={to}
+                                    end={end}
+                                    sx={{
+                                        mb: 0.5,
+                                        borderRadius: 1,
+                                        '&.active': {
+                                            backgroundColor: 'action.selected',
+                                            color: 'primary.main',
+                                        },
+                                        '&.active .MuiListItemIcon-root': {
+                                            color: 'primary.main',
+                                        },
+                                    }}
+                                >
+                                    <ListItemIcon>
+                                        <Icon />
+                                    </ListItemIcon>
+                                    <ListItemText primary={label} />
+                                </ListItemButton>
+                            ))}
+                        </List>
+                    </Box>
 
                     <Box sx={{ mt: 'auto', p: 2 }}>
                         <Typography variant="body2" sx={{ mb: 1 }}>
                             {user?.username} ({user?.role})
                         </Typography>
+                        {logoutError && (
+                            <Alert severity="error" sx={{ mb: 1 }}>
+                                {logoutError}
+                            </Alert>
+                        )}
                         <Button
                             fullWidth
                             variant="outlined"
                             onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            startIcon={isLoggingOut
+                                ? <CircularProgress size={16} />
+                                : undefined}
                         >
                             {APP_SHELL_COPY.logout}
                         </Button>
-                        <Typography
-                            variant="body2"
-                            color="success.main"
-                            sx={{ mt: 2 }}
-                        >
-                            {APP_SHELL_COPY.systemStatus}
-                        </Typography>
                     </Box>
                 </Stack>
             </Drawer>

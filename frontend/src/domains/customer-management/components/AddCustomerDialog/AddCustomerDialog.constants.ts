@@ -38,20 +38,14 @@ export const CREATE_CUSTOMER_SCHEMA = z.object({
         })
         .trim()
         .min(1, 'First name is required')
-        .regex(
-            /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/,
-            'Please provide a valid first name',
-        ),
+        .max(50, 'First name must be 50 characters or fewer'),
     lastName: z
         .string({
             error: 'Last name is required',
         })
         .trim()
         .min(1, 'Last name is required')
-        .regex(
-            /^[A-Za-zÀ-ÖØ-öø-ÿ\s'-]+$/,
-            'Please provide a valid last name',
-        ),
+        .max(50, 'Last name must be 50 characters or fewer'),
     dateOfBirth: z
         .string({
             error: 'Date of birth is required',

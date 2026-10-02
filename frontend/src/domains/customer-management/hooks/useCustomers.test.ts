@@ -53,7 +53,6 @@ describe('useCustomers', () => {
         const requestError = new Error('Unable to load customers.')
         mockGetCustomers
             .mockRejectedValueOnce(requestError)
-            .mockRejectedValueOnce(requestError)
             .mockResolvedValueOnce([])
 
         const { result } = renderHook(() => useCustomers())
@@ -69,6 +68,6 @@ describe('useCustomers', () => {
             expect(result.current.isError).toBe(false)
             expect(result.current.error).toBeNull()
         })
-        expect(mockGetCustomers).toHaveBeenCalledTimes(3)
+        expect(mockGetCustomers).toHaveBeenCalledTimes(2)
     })
 })

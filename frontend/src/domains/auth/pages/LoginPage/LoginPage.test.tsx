@@ -2,13 +2,14 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ApiError } from '../../../../shared/api/apiError'
 import LoginPage from './LoginPage'
 
 const { mockLogin } = vi.hoisted(() => ({
     mockLogin: vi.fn(),
 }))
 
-vi.mock('../../../../shared/auth/AuthProvider', () => ({
+vi.mock('../../../../shared/auth/useAuth', () => ({
     useAuth: () => ({ login: mockLogin }),
 }))
 
@@ -50,7 +51,7 @@ describe('LoginPage', () => {
 
     it('shows a useful error and allows another attempt when login fails', async () => {
         const user = userEvent.setup()
-        mockLogin.mockRejectedValueOnce(new Error('Unauthorized'))
+        mockLogin.mockRejectedValueOnce(new ApiError(401, 'Unauthorized'))
         renderLoginPage()
 
         await user.type(screen.getByRole('textbox', { name: 'Username' }), 'admin')

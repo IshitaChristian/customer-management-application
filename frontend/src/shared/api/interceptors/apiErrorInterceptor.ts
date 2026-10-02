@@ -14,6 +14,7 @@ function isErrorMap(value: unknown): value is Record<string, string> {
         && Object.values(value).every((item) => typeof item === 'string')
 }
 
+/** Converts Axios failures into the application's stable, UI-safe error shape. */
 export function handleApiError(
     error: AxiosError<ApiErrorResponse>,
 ): never {

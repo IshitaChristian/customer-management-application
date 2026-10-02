@@ -20,6 +20,7 @@ import {
     APP_SHELL_NAVIGATION,
 } from './AppShell.constants'
 
+/** Provides the authenticated navigation shell and session logout action. */
 function AppShell() {
     const { user, logout } = useAuth()
     const navigate = useNavigate()

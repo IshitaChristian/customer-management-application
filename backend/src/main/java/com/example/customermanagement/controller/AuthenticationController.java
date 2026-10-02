@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AuthenticationController {
 
+    /**
+     * Returns the current session user's username and application role.
+     */
     @GetMapping("/api/v1/auth")
     public AuthenticatedUserResponse currentUser(Authentication authentication) {
         String role = authentication.getAuthorities().stream()

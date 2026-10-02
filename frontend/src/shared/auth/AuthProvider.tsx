@@ -18,6 +18,7 @@ import { AUTHENTICATION_EXPIRED_EVENT } from './authEvents'
 const AUTHENTICATION_CHECK_ERROR =
     'Unable to check your sign-in status. Please try again.'
 
+/** Restores and shares session identity while keeping retry and expiry state in sync. */
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthenticatedUser | null>(null)
     const [authError, setAuthError] = useState<string | null>(null)
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [completedCheckAttempt, setCompletedCheckAttempt] = useState<number | null>(null)
     const isLoading = completedCheckAttempt !== checkAttempt
 
+    // A completed-attempt marker derives loading state without a synchronous effect update.
     useEffect(() => {
         let active = true
 

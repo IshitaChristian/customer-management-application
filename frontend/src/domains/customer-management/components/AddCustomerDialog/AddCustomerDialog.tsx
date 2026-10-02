@@ -39,6 +39,7 @@ interface AddCustomerDialogProps {
   onCreated: () => void
 }
 
+/** Collects validated customer details and reports successful creation to the page. */
 function AddCustomerDialog({
   open,
   onClose,

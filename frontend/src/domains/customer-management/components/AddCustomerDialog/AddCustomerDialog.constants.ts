@@ -31,6 +31,7 @@ export const DEFAULT_CUSTOMER_FORM_VALUES = {
     dateOfBirth: '',
 }
 
+/** Mirrors backend field constraints so invalid customer data is caught early. */
 export const CREATE_CUSTOMER_SCHEMA = z.object({
     firstName: z
         .string({

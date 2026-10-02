@@ -21,6 +21,7 @@ const CustomerList = lazy(
     () => import('../../components/CustomerList/CustomerList'),
 )
 
+/** Coordinates customer loading, list actions, and ADMIN-only creation UI. */
 function CustomersPage() {
     const { user } = useAuth()
     const canManageCustomers = user?.role === 'ADMIN'

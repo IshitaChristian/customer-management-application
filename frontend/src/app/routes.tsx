@@ -5,6 +5,7 @@ import AppShell from '../layouts/AppShell'
 import CustomersPage from '../domains/customer-management/pages/CustomersPage/CustomersPage'
 import { useAuth } from '../shared/auth/useAuth'
 
+/** Resolves public and authenticated routes after session restoration. */
 function AppRoutes() {
     const { user, isLoading } = useAuth()
 

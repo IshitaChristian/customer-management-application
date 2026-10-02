@@ -18,6 +18,7 @@ const apiClient = axios.create({
     },
 })
 
+// Expire local identity on protected-request 401s, but not expected auth checks.
 apiClient.interceptors.response.use(
     (response: AxiosResponse) => response,
     (error: AxiosError<ApiErrorResponse>) => {
@@ -34,6 +35,7 @@ apiClient.interceptors.response.use(
     },
 )
 
+// Fetch a fresh CSRF token before every state-changing session request.
 apiClient.interceptors.request.use(
     async (config: InternalAxiosRequestConfig) => {
         if (config.method && !['get', 'head', 'options'].includes(config.method)) {

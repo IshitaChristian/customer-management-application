@@ -19,6 +19,7 @@ interface CustomerDetailsDialogProps {
     onClose: () => void
 }
 
+/** Fetches full details only when an ADMIN opens a customer's detail view. */
 function CustomerDetailsDialog({
     customerId,
     onClose,

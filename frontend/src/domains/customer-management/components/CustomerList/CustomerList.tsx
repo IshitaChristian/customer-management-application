@@ -28,6 +28,7 @@ interface CustomerListProps {
     canManageCustomers: boolean
 }
 
+/** Displays list-safe customer fields and opens details only when requested. */
 function CustomerList({
     customers,
     onRefresh,

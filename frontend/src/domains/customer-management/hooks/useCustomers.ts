@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { getCustomers } from '../api/customerApi'
 import type { CustomerSummary } from '../types/customer'
 
+/** Loads customer summaries and cancels stale requests on refresh or unmount. */
 export function useCustomers() {
   const [data, setData] = useState<CustomerSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)

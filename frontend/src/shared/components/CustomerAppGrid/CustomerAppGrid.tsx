@@ -58,6 +58,7 @@ export interface CustomerAppGridProps<TData> {
     onFilterChanged?: (event: FilterChangedEvent<TData>) => void
 }
 
+/** Applies the application's shared grid defaults while keeping row data generic. */
 function CustomerAppGrid<TData>({
     rowData,
     columnDefs,

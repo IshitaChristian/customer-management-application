@@ -28,6 +28,9 @@ public class CustomerController {
         this.customerService = customerService;
     }
 
+    /**
+     * Creates a customer from validated details; ADMIN access is required.
+     */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
@@ -42,6 +45,9 @@ public class CustomerController {
         return CustomerDetailsResponse.fromCustomer(customer);
     }
 
+    /**
+     * Returns customer summaries for USER and ADMIN accounts.
+     */
     @GetMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public List<CustomerSummaryResponse> getAllCustomers() {
@@ -51,6 +57,9 @@ public class CustomerController {
                 .toList();
     }
 
+    /**
+     * Returns full details, including DOB, to ADMIN users only to limit exposure of personal data.
+     */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public CustomerDetailsResponse getCustomerById(@PathVariable Long id) {

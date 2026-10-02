@@ -2,6 +2,7 @@ package com.example.customermanagement.service;
 
 import com.example.customermanagement.entity.Customer;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface CustomerService {
@@ -9,7 +10,7 @@ public interface CustomerService {
     Customer createCustomer(
             String firstName,
             String lastName,
-            java.time.LocalDate dateOfBirth
+            LocalDate dateOfBirth
     );
 
     List<Customer> getAllCustomers();

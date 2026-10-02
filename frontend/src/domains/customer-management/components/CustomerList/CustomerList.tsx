@@ -1,9 +1,11 @@
 import { Refresh } from '@mui/icons-material'
 import {
+    Alert,
     Box,
     Button,
     Card,
     CardContent,
+    CircularProgress,
     Dialog,
     DialogContent,
     DialogTitle,
@@ -13,8 +15,9 @@ import {
     Typography,
 } from '@mui/material'
 import type { ColDef, FilterChangedEvent, GridApi, ICellRendererParams } from 'ag-grid-community'
-import { useCallback, useMemo, useRef, useState } from 'react'
-import type { Customer } from '../../types/customer'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { getCustomerById } from '../../api/customerApi'
+import type { Customer, CustomerSummary } from '../../types/customer'
 import CustomerAppGrid from '../../../../shared/components/CustomerAppGrid/CustomerAppGrid'
 import { CUSTOMER_PAGE_COPY } from '../../pages/CustomersPage/CustomersPage.constants'
 import {
@@ -25,7 +28,7 @@ import {
 } from './CustomerList.constants'
 
 interface CustomerListProps {
-    customers: Customer[]
+    customers: CustomerSummary[]
     onAddCustomer: () => void
     onRefresh: () => void
     canManageCustomers: boolean
@@ -37,22 +40,25 @@ function CustomerList({
     onRefresh,
     canManageCustomers,
 }: CustomerListProps) {
-    const gridApiRef = useRef<GridApi<Customer> | null>(null)
+    const gridApiRef = useRef<GridApi<CustomerSummary> | null>(null)
     const [hasActiveFilters, setHasActiveFilters] = useState(false)
+    const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null)
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+    const [isLoadingDetails, setIsLoadingDetails] = useState(false)
+    const [detailsError, setDetailsError] = useState<string | null>(null)
 
-    const columnDefs = useMemo<ColDef<Customer>[]>(() => [
+    const columnDefs = useMemo<ColDef<CustomerSummary>[]>(() => [
         ...CUSTOMER_COLUMN_DEFS,
         ...(canManageCustomers ? [{
             headerName: 'Actions',
             sortable: false,
             filter: false,
             width: 160,
-            cellRenderer: (params: ICellRendererParams<Customer>) =>
+            cellRenderer: (params: ICellRendererParams<CustomerSummary>) =>
                 params.data ? (
                     <Button
                         size="small"
-                        onClick={() => setSelectedCustomer(params.data ?? null)}
+                        onClick={() => setSelectedCustomerId(params.data!.id)}
                     >
                         View Details
                     </Button>
@@ -60,8 +66,38 @@ function CustomerList({
         }] : []),
     ], [canManageCustomers])
 
+    useEffect(() => {
+        if (selectedCustomerId === null) {
+            return
+        }
+
+        const controller = new AbortController()
+        setSelectedCustomer(null)
+        setDetailsError(null)
+        setIsLoadingDetails(true)
+
+        getCustomerById(selectedCustomerId, controller.signal)
+            .then(setSelectedCustomer)
+            .catch((error: unknown) => {
+                if (!controller.signal.aborted) {
+                    setDetailsError(
+                        error instanceof Error
+                            ? error.message
+                            : 'Unable to load customer details.',
+                    )
+                }
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setIsLoadingDetails(false)
+                }
+            })
+
+        return () => controller.abort()
+    }, [selectedCustomerId])
+
     const handleFilterChanged = useCallback(
-        (event: FilterChangedEvent<Customer>) => {
+        (event: FilterChangedEvent<CustomerSummary>) => {
             setHasActiveFilters(event.api.isAnyFilterPresent())
         },
         [],
@@ -154,13 +190,17 @@ function CustomerList({
                 onFilterChanged={handleFilterChanged}
             />
             <Dialog
-                open={selectedCustomer !== null}
-                onClose={() => setSelectedCustomer(null)}
+                open={selectedCustomerId !== null}
+                onClose={() => setSelectedCustomerId(null)}
                 fullWidth
                 maxWidth="sm"
             >
                 <DialogTitle>Customer details</DialogTitle>
                 <DialogContent dividers>
+                    {isLoadingDetails && (
+                        <CircularProgress aria-label="Loading customer details" />
+                    )}
+                    {detailsError && <Alert severity="error">{detailsError}</Alert>}
                     {selectedCustomer && (
                         <Stack spacing={1}>
                             <Typography>ID: {selectedCustomer.id}</Typography>

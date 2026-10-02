@@ -1,7 +1,8 @@
 package com.example.customermanagement.controller;
 
-import com.example.customermanagement.dto.CreateCustomerRequest;
-import com.example.customermanagement.dto.CustomerResponse;
+import com.example.customermanagement.dto.CustomerDetailsResponse;
+import com.example.customermanagement.dto.CustomerRequest;
+import com.example.customermanagement.dto.CustomerSummaryResponse;
 import com.example.customermanagement.entity.Customer;
 import com.example.customermanagement.service.CustomerService;
 import jakarta.validation.Valid;
@@ -30,30 +31,30 @@ public class CustomerController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    public CustomerResponse createCustomer(
-            @Valid @RequestBody CreateCustomerRequest request
+    public CustomerDetailsResponse createCustomer(
+            @Valid @RequestBody CustomerRequest request
     ) {
         Customer customer = customerService.createCustomer(
                 request.firstName(),
                 request.lastName(),
                 request.dateOfBirth()
         );
-        return CustomerResponse.from(customer);
+        return CustomerDetailsResponse.fromCustomer(customer);
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public List<CustomerResponse> getAllCustomers() {
+    public List<CustomerSummaryResponse> getAllCustomers() {
         return customerService.getAllCustomers()
                 .stream()
-                .map(CustomerResponse::from)
+                .map(CustomerSummaryResponse::fromCustomer)
                 .toList();
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public CustomerResponse getCustomerById(@PathVariable Long id) {
+    public CustomerDetailsResponse getCustomerById(@PathVariable Long id) {
         Customer customer = customerService.getCustomerById(id);
-        return CustomerResponse.from(customer);
+        return CustomerDetailsResponse.fromCustomer(customer);
     }
 }

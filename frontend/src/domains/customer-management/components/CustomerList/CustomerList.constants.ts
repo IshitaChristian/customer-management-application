@@ -1,12 +1,12 @@
 import type { ColDef } from 'ag-grid-community'
-import type { Customer } from '../../types/customer'
+import type { CustomerSummary } from '../../types/customer'
 
 export const DEFAULT_ROWS_PER_PAGE = 15
 export const ROWS_PER_PAGE_OPTIONS = [10, 15, 25, 50]
 export const NO_CUSTOMERS_MATCH_MESSAGE =
     'No customers found. Try adjusting your filters.'
 
-export const CUSTOMER_COLUMN_DEFS: ColDef<Customer>[] = [
+export const CUSTOMER_COLUMN_DEFS: ColDef<CustomerSummary>[] = [
     {
         field: 'id',
         headerName: 'ID',

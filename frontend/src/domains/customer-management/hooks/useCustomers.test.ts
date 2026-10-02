@@ -20,7 +20,6 @@ describe('useCustomers', () => {
                 id: 1,
                 firstName: 'Ada',
                 lastName: 'Lovelace',
-                dateOfBirth: '1815-12-10',
             },
         ]
         const refreshedResponse = [
@@ -29,7 +28,6 @@ describe('useCustomers', () => {
                 id: 2,
                 firstName: 'Grace',
                 lastName: 'Hopper',
-                dateOfBirth: '1906-12-09',
             },
         ]
         mockGetCustomers

@@ -1,6 +1,8 @@
 spring:
   application:
     name: customer-management-backend
+  datasource:
+    url: jdbc:h2:mem:customer-management
   jpa:
     open-in-view: false
 

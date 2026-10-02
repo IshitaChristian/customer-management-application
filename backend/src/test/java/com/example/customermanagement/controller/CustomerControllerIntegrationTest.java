@@ -10,6 +10,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -43,6 +45,12 @@ class CustomerControllerIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @BeforeEach
     void setUp() {
         customerRepository.deleteAll();
@@ -62,6 +70,18 @@ class CustomerControllerIntegrationTest {
                 .andExpect(jsonPath("$.dateOfBirth").value("1990-05-15"))
                 .andExpect(jsonPath("$.password").doesNotExist())
                 .andExpect(jsonPath("$.session").doesNotExist());
+    }
+
+    @Test
+    void repeatedCreateRequestsCreateSeparateCustomers() throws Exception {
+        createCustomerAsAdmin();
+        createCustomerAsAdmin();
+
+        mockMvc.perform(get("/api/v1/customers")
+                        .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
@@ -110,6 +130,20 @@ class CustomerControllerIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.firstName").value(maxLengthName));
     }
+
+    @Test
+    void acceptsTodaysDateOfBirth() throws Exception {
+        mockMvc.perform(post("/api/v1/customers")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"firstName":"John","lastName":"Smith","dateOfBirth":"%s"}
+                                """.formatted(LocalDate.now())))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.dateOfBirth").value(LocalDate.now().toString()));
+    }
+
     @Test
     void rejectsMissingAndMalformedDateOfBirth() throws Exception {
         mockMvc.perform(post("/api/v1/customers")
@@ -136,9 +170,13 @@ class CustomerControllerIntegrationTest {
 
     @Test
     void userCanListButCannotReadSingleCustomerOrCreate() throws Exception {
+        createCustomerAsAdmin();
+
         mockMvc.perform(get("/api/v1/customers")
                         .with(user("user").roles("USER")))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].firstName").value("John"))
+                .andExpect(jsonPath("$[0].dateOfBirth").doesNotExist());
 
         mockMvc.perform(get("/api/v1/customers/{id}", 999)
                         .with(user("user").roles("USER")))
@@ -157,10 +195,16 @@ class CustomerControllerIntegrationTest {
         createCustomerAsAdmin();
         Long customerId = customerRepository.findAll().getFirst().getId();
 
+        mockMvc.perform(get("/api/v1/customers")
+                        .with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].dateOfBirth").doesNotExist());
+
         mockMvc.perform(get("/api/v1/customers/{id}", customerId)
                         .with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(customerId));
+                .andExpect(jsonPath("$.id").value(customerId))
+                .andExpect(jsonPath("$.dateOfBirth").value("1990-05-15"));
     }
 
     @Test
@@ -176,16 +220,20 @@ class CustomerControllerIntegrationTest {
     @Test
     void returnsUnauthorizedForUnauthenticatedRequests() throws Exception {
         mockMvc.perform(get("/api/v1/customers"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Unauthorized"));
 
         mockMvc.perform(get("/api/v1/auth"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
 
         mockMvc.perform(post("/api/v1/customers")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_CUSTOMER_REQUEST))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401));
     }
 
     @Test
@@ -194,14 +242,17 @@ class CustomerControllerIntegrationTest {
                         .with(user("admin").roles("ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_CUSTOMER_REQUEST))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403))
+                .andExpect(jsonPath("$.message").value("Forbidden"));
 
         mockMvc.perform(post("/api/v1/customers")
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf().useInvalidToken())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(VALID_CUSTOMER_REQUEST))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status").value(403));
     }
 
     @Test
@@ -234,12 +285,40 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
+    void adminSessionCanCreateAndReadCustomer() throws Exception {
+        var login = mockMvc.perform(post("/api/v1/login")
+                        .with(csrf())
+                        .param("username", "admin")
+                        .param("password", "admin123"))
+                .andExpect(status().isNoContent())
+                .andReturn();
+        MockHttpSession session = (MockHttpSession) login.getRequest()
+                .getSession(false);
+        assertNotNull(session);
+
+        mockMvc.perform(post("/api/v1/customers")
+                        .session(session)
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_CUSTOMER_REQUEST))
+                .andExpect(status().isCreated());
+        Long customerId = customerRepository.findAll().getFirst().getId();
+
+        mockMvc.perform(get("/api/v1/customers/{id}", customerId)
+                        .session(session))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.dateOfBirth").value("1990-05-15"));
+    }
+
+    @Test
     void loginRejectsInvalidCredentials() throws Exception {
         mockMvc.perform(post("/api/v1/login")
                         .with(csrf())
                         .param("username", "user")
                         .param("password", "wrong-password"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.message").value("Unauthorized"));
     }
 
     @Test
@@ -274,6 +353,23 @@ class CustomerControllerIntegrationTest {
     }
 
     @Test
+    void configuredPasswordsAreStoredAsBcryptHashes() {
+        var user = userDetailsService.loadUserByUsername("user");
+        var admin = userDetailsService.loadUserByUsername("admin");
+
+        org.junit.jupiter.api.Assertions.assertNotEquals("user123", user.getPassword());
+        org.junit.jupiter.api.Assertions.assertTrue(passwordEncoder.matches(
+                "user123",
+                user.getPassword()
+        ));
+        org.junit.jupiter.api.Assertions.assertNotEquals("admin123", admin.getPassword());
+        org.junit.jupiter.api.Assertions.assertTrue(passwordEncoder.matches(
+                "admin123",
+                admin.getPassword()
+        ));
+    }
+
+    @Test
     void currentUserEndpointReturnsOnlyUsernameAndRole() throws Exception {
         mockMvc.perform(get("/api/v1/auth")
                         .with(user("admin").roles("ADMIN")))
@@ -295,7 +391,17 @@ class CustomerControllerIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[*].id", contains(10, 20, 30)))
                 .andExpect(jsonPath("$[*].firstName",
-                        contains("Ten", "Twenty", "Thirty")));
+                        contains("Ten", "Twenty", "Thirty")))
+                .andExpect(jsonPath("$[*].dateOfBirth").doesNotExist());
+    }
+
+    @Test
+    void emptyCustomerCollectionReturnsAnEmptyArray() throws Exception {
+        mockMvc.perform(get("/api/v1/customers")
+                        .with(user("user").roles("USER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 
     private void createCustomerAsAdmin() throws Exception {

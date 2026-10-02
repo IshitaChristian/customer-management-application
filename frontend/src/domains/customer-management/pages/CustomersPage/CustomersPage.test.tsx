@@ -126,7 +126,6 @@ describe('CustomersPage', () => {
           id: 1,
           firstName: 'Ada',
           lastName: 'Lovelace',
-          dateOfBirth: '1815-12-10',
         },
       ],
       isLoading: false,

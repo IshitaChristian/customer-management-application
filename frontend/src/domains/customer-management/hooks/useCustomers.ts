@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { getCustomers } from '../api/customerApi'
-import type { Customer } from '../types/customer'
+import type { CustomerSummary } from '../types/customer'
 
 async function getCustomersWithRetry(signal: AbortSignal) {
   try {
@@ -15,7 +15,7 @@ async function getCustomersWithRetry(signal: AbortSignal) {
 }
 
 export function useCustomers() {
-  const [data, setData] = useState<Customer[]>([])
+  const [data, setData] = useState<CustomerSummary[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<unknown>(null)
   const [reloadKey, setReloadKey] = useState(0)

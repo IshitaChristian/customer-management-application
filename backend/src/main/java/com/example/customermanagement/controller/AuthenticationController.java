@@ -1,5 +1,6 @@
 package com.example.customermanagement.controller;
 
+import com.example.customermanagement.dto.AuthenticatedUserResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -8,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthenticationController {
 
     @GetMapping("/api/v1/auth")
-    public AuthenticatedUser currentUser(Authentication authentication) {
+    public AuthenticatedUserResponse currentUser(Authentication authentication) {
         String role = authentication.getAuthorities().stream()
                 .map(authority -> authority.getAuthority())
                 .filter(authority -> authority.equals("ROLE_USER")
@@ -17,9 +18,6 @@ public class AuthenticationController {
                 .findFirst()
                 .orElseThrow();
 
-        return new AuthenticatedUser(authentication.getName(), role);
-    }
-
-    public record AuthenticatedUser(String username, String role) {
+        return new AuthenticatedUserResponse(authentication.getName(), role);
     }
 }

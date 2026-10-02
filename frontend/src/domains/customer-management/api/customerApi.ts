@@ -6,9 +6,12 @@ import type {
 
 const CUSTOMER_ENDPOINT = '/api/v1/customers'
 
-export async function getCustomers(): Promise<Customer[]> {
+export async function getCustomers(
+    signal?: AbortSignal,
+): Promise<Customer[]> {
   const response = await apiClient.get<Customer[]>(
     CUSTOMER_ENDPOINT,
+    { signal },
   )
 
   return response.data

@@ -33,10 +33,6 @@ const theme = createTheme({
         body1: {
             fontSize: '0.95rem',
         },
-
-        body2: {
-            fontSize: '0.875rem',
-        },
     },
 
     components: {
@@ -44,18 +40,6 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     borderRadius: 12,
-                },
-            },
-        },
-
-        MuiTableCell: {
-            styleOverrides: {
-                root: {
-                    borderColor: '#e8ebef',
-                },
-
-                head: {
-                    fontWeight: 700,
                 },
             },
         },

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import userEvent from '@testing-library/user-event'
@@ -6,20 +6,54 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import CustomersPage from './CustomersPage'
 
-const { mockMutation, mockUseCustomers } = vi.hoisted(() => ({
-  mockMutation: {
-    mutate: vi.fn(),
-    reset: vi.fn(),
-    isPending: false,
-    isError: false,
-    error: null,
-  },
+const { mockUseCustomers, mockRefetch, mockCreateCustomer } = vi.hoisted(() => ({
   mockUseCustomers: vi.fn(),
+  mockRefetch: vi.fn(),
+  mockCreateCustomer: vi.fn(),
+}))
+
+vi.mock('../../components/CustomerList/CustomerList', () => ({
+  default: ({ customers, onAddCustomer }: {
+    customers: unknown[]
+    onAddCustomer: () => void
+  }) => (
+    <div data-testid="customer-list">
+      {customers.length === 0 && (
+        <button onClick={onAddCustomer}>Add Customer</button>
+      )}
+    </div>
+  ),
 }))
 
 vi.mock('../../hooks/useCustomers', () => ({
   useCustomers: mockUseCustomers,
-  useCreateCustomer: () => mockMutation,
+}))
+
+vi.mock('../../api/customerApi', () => ({
+  createCustomer: mockCreateCustomer,
+}))
+
+vi.mock('@mui/x-date-pickers/DatePicker', () => ({
+  DatePicker: ({
+    label,
+    value,
+    onChange,
+  }: {
+    label: string
+    value: Date | null
+    onChange: (value: Date | null) => void
+  }) => (
+    <input
+      aria-label={label}
+      value={value ? value.toISOString().slice(0, 10) : ''}
+      onChange={(event) => {
+        const inputValue = event.target.value
+        onChange(
+          inputValue ? new Date(`${inputValue}T00:00:00`) : null,
+        )
+      }}
+    />
+  ),
 }))
 
 function renderCustomersPage() {
@@ -34,12 +68,14 @@ function renderCustomersPage() {
 
 describe('CustomersPage', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
+    mockCreateCustomer.mockResolvedValue({})
     mockUseCustomers.mockReturnValue({
       data: [],
       isLoading: false,
       isError: false,
       error: null,
-      refetch: vi.fn(),
+      refetch: mockRefetch,
     })
   })
 
@@ -67,5 +103,48 @@ describe('CustomersPage', () => {
     expect(
       screen.getByRole('dialog', { name: 'Add customer' }),
     ).toBeInTheDocument()
+  })
+
+  it('renders the customer list for customer records', async () => {
+    mockUseCustomers.mockReturnValue({
+      data: [
+        {
+          id: 1,
+          firstName: 'Ada',
+          lastName: 'Lovelace',
+          dateOfBirth: '1815-12-10',
+        },
+      ],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: mockRefetch,
+    })
+
+    renderCustomersPage()
+
+    expect(
+      await screen.findByTestId('customer-list'),
+    ).toBeInTheDocument()
+  })
+
+  it('refreshes customers after creating a customer', async () => {
+    const user = userEvent.setup()
+    renderCustomersPage()
+    await user.click(
+      screen.getAllByRole('button', { name: 'Add Customer' })[0],
+    )
+    await user.type(screen.getByLabelText('First name'), 'Jane')
+    await user.type(screen.getByLabelText('Last name'), 'Doe')
+    fireEvent.change(screen.getByLabelText('Date of birth'), {
+      target: { value: '1990-05-10' },
+    })
+    await user.click(
+      screen.getByRole('button', { name: 'Add customer' }),
+    )
+
+    expect(await screen.findByText('Customer added successfully.'))
+      .toBeInTheDocument()
+    expect(mockRefetch).toHaveBeenCalledOnce()
   })
 })

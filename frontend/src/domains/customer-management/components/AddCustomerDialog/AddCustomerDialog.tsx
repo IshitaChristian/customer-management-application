@@ -14,9 +14,9 @@ import {
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { format, isValid, parseISO } from 'date-fns'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { useCreateCustomer } from '../../hooks/useCustomers'
+import { createCustomer } from '../../api/customerApi'
 import {
   ADD_CUSTOMER_DESCRIPTION_ID,
   ADD_CUSTOMER_DIALOG_COPY,
@@ -42,7 +42,8 @@ function AddCustomerDialog({
   onClose,
   onCreated,
 }: AddCustomerDialogProps) {
-  const createCustomerMutation = useCreateCustomer()
+  const [isPending, setIsPending] = useState(false)
+  const [error, setError] = useState<unknown>(null)
   const {
     register,
     handleSubmit,
@@ -60,34 +61,34 @@ function AddCustomerDialog({
     name: 'dateOfBirth',
   })
 
-  const {
-    isPending,
-    isError,
-    error,
-    mutate,
-    reset: resetMutation,
-  } = createCustomerMutation
-
   useEffect(() => {
     if (open) {
       reset()
-      resetMutation()
     }
-  }, [open, reset, resetMutation])
+  }, [open, reset])
 
   const handleClose = () => {
     if (!isPending) {
+      setError(null)
       onClose()
     }
   }
 
-  const onSubmit = (values: CreateCustomerFormValues) => {
-    mutate(values, {
-      onSuccess: () => {
-        onCreated()
-        onClose()
-      },
-    })
+  const onSubmit = async (values: CreateCustomerFormValues) => {
+    setIsPending(true)
+    setError(null)
+
+    try {
+      await createCustomer(values)
+    } catch (requestError: unknown) {
+      setError(requestError)
+      return
+    } finally {
+      setIsPending(false)
+    }
+
+    onCreated()
+    onClose()
   }
 
   return (
@@ -119,7 +120,7 @@ function AddCustomerDialog({
           noValidate
         >
           <Stack spacing={2.5}>
-            {isError && (
+            {error !== null && (
               <Alert severity="error" role="alert">
                 {error instanceof Error
                   ? error.message

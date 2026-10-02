@@ -1,34 +1,56 @@
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
-import {
-  createCustomer,
-  getCustomers,
-} from '../api/customerApi'
+import { useCallback, useEffect, useState } from 'react'
+import { getCustomers } from '../api/customerApi'
+import type { Customer } from '../types/customer'
 
-export const customerKeys = {
-  all: ['customers'] as const,
-  list: () => [...customerKeys.all, 'list'] as const,
+async function getCustomersWithRetry(signal: AbortSignal) {
+  try {
+    return await getCustomers(signal)
+  } catch (requestError: unknown) {
+    if (signal.aborted) {
+      throw requestError
+    }
+
+    return getCustomers(signal)
+  }
 }
 
 export function useCustomers() {
-  return useQuery({
-    queryKey: customerKeys.list(),
-    queryFn: getCustomers,
-  })
-}
+  const [data, setData] = useState<Customer[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<unknown>(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
-export function useCreateCustomer() {
-  const queryClient = useQueryClient()
+  const refetch = useCallback(() => {
+    setReloadKey((key) => key + 1)
+  }, [])
 
-  return useMutation({
-    mutationFn: createCustomer,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: customerKeys.list(),
+  useEffect(() => {
+    const controller = new AbortController()
+
+    getCustomersWithRetry(controller.signal)
+      .then((customers) => {
+        setData(customers)
+        setError(null)
       })
-    },
-  })
+      .catch((requestError: unknown) => {
+        if (!controller.signal.aborted) {
+          setError(requestError)
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoading(false)
+        }
+      })
+
+    return () => controller.abort()
+  }, [reloadKey])
+
+  return {
+    data,
+    isLoading,
+    isError: error !== null,
+    error,
+    refetch,
+  }
 }

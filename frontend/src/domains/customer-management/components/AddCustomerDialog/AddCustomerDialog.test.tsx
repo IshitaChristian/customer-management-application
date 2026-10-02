@@ -8,18 +8,12 @@ import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AddCustomerDialog from './AddCustomerDialog'
 
-const {
-  mockMutate,
-  mockResetMutation,
-  mockUseCreateCustomer,
-} = vi.hoisted(() => ({
-  mockMutate: vi.fn(),
-  mockResetMutation: vi.fn(),
-  mockUseCreateCustomer: vi.fn(),
+const { mockCreateCustomer } = vi.hoisted(() => ({
+  mockCreateCustomer: vi.fn(),
 }))
 
-vi.mock('../../hooks/useCustomers', () => ({
-  useCreateCustomer: mockUseCreateCustomer,
+vi.mock('../../api/customerApi', () => ({
+  createCustomer: mockCreateCustomer,
 }))
 
 vi.mock('@mui/x-date-pickers/DatePicker', () => ({
@@ -81,13 +75,7 @@ function renderDialog({
 describe('AddCustomerDialog', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockUseCreateCustomer.mockReturnValue({
-      mutate: mockMutate,
-      reset: mockResetMutation,
-      isPending: false,
-      isError: false,
-      error: null,
-    })
+    mockCreateCustomer.mockResolvedValue({})
   })
 
   it('renders an accessible customer form dialog', () => {
@@ -128,7 +116,7 @@ describe('AddCustomerDialog', () => {
 
     expect(screen.getByText('First name is required')).toBeInTheDocument()
     expect(screen.getByText('Last name is required')).toBeInTheDocument()
-    expect(mockMutate).not.toHaveBeenCalled()
+    expect(mockCreateCustomer).not.toHaveBeenCalled()
 
     await user.type(screen.getByLabelText('First name'), 'Jane123')
     await user.type(screen.getByLabelText('Last name'), 'Doe123')
@@ -142,7 +130,7 @@ describe('AddCustomerDialog', () => {
     expect(
       screen.getByText('Please provide a valid last name'),
     ).toBeInTheDocument()
-    expect(mockMutate).not.toHaveBeenCalled()
+    expect(mockCreateCustomer).not.toHaveBeenCalled()
   })
 
   it('rejects a future date of birth', async () => {
@@ -161,23 +149,12 @@ describe('AddCustomerDialog', () => {
     expect(
       screen.getByText('Please provide a valid date of birth'),
     ).toBeInTheDocument()
-    expect(mockMutate).not.toHaveBeenCalled()
+    expect(mockCreateCustomer).not.toHaveBeenCalled()
   })
 
   it('submits valid details and reports successful creation', async () => {
     const user = userEvent.setup()
     const { onClose, onCreated } = renderDialog()
-    mockMutate.mockImplementationOnce(
-      (
-        _values: {
-          firstName: string
-          lastName: string
-          dateOfBirth: string
-        },
-        options?: { onSuccess?: () => void },
-      ) => options?.onSuccess?.(),
-    )
-
     await user.type(screen.getByLabelText('First name'), 'Jane')
     await user.type(screen.getByLabelText('Last name'), 'Doe')
     fireEvent.change(screen.getByLabelText('Date of birth'), {
@@ -188,32 +165,33 @@ describe('AddCustomerDialog', () => {
     )
 
     await waitFor(() => {
-      expect(mockMutate).toHaveBeenCalledWith(
-        {
-          firstName: 'Jane',
-          lastName: 'Doe',
-          dateOfBirth: '1990-05-10',
-        },
-        expect.objectContaining({
-          onSuccess: expect.any(Function),
-        }),
-      )
+      expect(mockCreateCustomer).toHaveBeenCalledWith({
+        firstName: 'Jane',
+        lastName: 'Doe',
+        dateOfBirth: '1990-05-10',
+      })
     })
     expect(onCreated).toHaveBeenCalledOnce()
     expect(onClose).toHaveBeenCalledOnce()
   })
 
   it('shows API errors without closing the dialog', async () => {
-    mockUseCreateCustomer.mockReturnValue({
-      mutate: mockMutate,
-      reset: mockResetMutation,
-      isPending: false,
-      isError: true,
-      error: new Error('Unable to save customer.'),
-    })
+    const user = userEvent.setup()
+    mockCreateCustomer.mockRejectedValueOnce(
+      new Error('Unable to save customer.'),
+    )
     const { onClose } = renderDialog()
 
-    expect(screen.getByRole('alert')).toHaveTextContent(
+    await user.type(screen.getByLabelText('First name'), 'Jane')
+    await user.type(screen.getByLabelText('Last name'), 'Doe')
+    fireEvent.change(screen.getByLabelText('Date of birth'), {
+      target: { value: '1990-05-10' },
+    })
+    await user.click(
+      screen.getByRole('button', { name: 'Add customer' }),
+    )
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
       'Unable to save customer.',
     )
     expect(onClose).not.toHaveBeenCalled()
@@ -222,14 +200,19 @@ describe('AddCustomerDialog', () => {
   it('prevents closing while the customer is being submitted', async () => {
     const user = userEvent.setup()
     const onClose = vi.fn()
-    mockUseCreateCustomer.mockReturnValue({
-      mutate: mockMutate,
-      reset: mockResetMutation,
-      isPending: true,
-      isError: false,
-      error: null,
-    })
+    mockCreateCustomer.mockReturnValue(
+      new Promise(() => {}),
+    )
     renderDialog({ onClose })
+
+    await user.type(screen.getByLabelText('First name'), 'Jane')
+    await user.type(screen.getByLabelText('Last name'), 'Doe')
+    fireEvent.change(screen.getByLabelText('Date of birth'), {
+      target: { value: '1990-05-10' },
+    })
+    await user.click(
+      screen.getByRole('button', { name: 'Add customer' }),
+    )
 
     expect(
       screen.getByRole('button', { name: 'Cancel' }),

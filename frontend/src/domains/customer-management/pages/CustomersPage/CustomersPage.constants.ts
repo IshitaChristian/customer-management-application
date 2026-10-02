@@ -4,6 +4,7 @@ export const CUSTOMER_PAGE_COPY = {
     addCustomer: 'Add Customer',
     emptyTitle: 'No customers yet',
     emptyDescription: 'Add your first customer to get started.',
+    emptyDescriptionForUser: 'There are currently no customers to display.',
     totalCustomers: 'Total number of customers',
     clearFilters: 'Clear filters',
     retryLoad: 'Try again',

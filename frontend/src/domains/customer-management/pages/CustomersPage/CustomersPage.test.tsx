@@ -19,15 +19,16 @@ const {
 }))
 
 vi.mock('../../components/CustomerList/CustomerList', () => ({
-  default: ({ customers, onAddCustomer, canManageCustomers }: {
+  default: ({ customers, canManageCustomers }: {
     customers: unknown[]
-    onAddCustomer: () => void
     canManageCustomers: boolean
   }) => (
     <div data-testid="customer-list">
-      {customers.length === 0 && canManageCustomers && (
-        <button onClick={onAddCustomer}>Add Customer</button>
-      )}
+      {customers.length === 0 && canManageCustomers
+        ? 'Add your first customer to get started.'
+        : customers.length === 0
+          ? 'There are currently no customers to display.'
+          : null}
     </div>
   ),
 }))
@@ -99,19 +100,6 @@ describe('CustomersPage', () => {
 
     await user.click(
       screen.getAllByRole('button', { name: 'Add Customer' })[0],
-    )
-
-    expect(
-      screen.getByRole('dialog', { name: 'Add customer' }),
-    ).toBeInTheDocument()
-  })
-
-  it('opens the add-customer dialog from the empty state', async () => {
-    const user = userEvent.setup()
-    renderCustomersPage()
-
-    await user.click(
-      screen.getAllByRole('button', { name: 'Add Customer' })[1],
     )
 
     expect(

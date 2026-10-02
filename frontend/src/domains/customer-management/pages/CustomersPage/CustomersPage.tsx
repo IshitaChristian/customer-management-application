@@ -91,7 +91,6 @@ function CustomersPage() {
                     >
                         <CustomerList
                             customers={customers}
-                            onAddCustomer={() => setIsAddDialogOpen(true)}
                             onRefresh={() => refetch()}
                             canManageCustomers={canManageCustomers}
                         />

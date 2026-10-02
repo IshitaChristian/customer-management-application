@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import CustomerList from './CustomerList'
 
@@ -15,21 +15,36 @@ vi.mock('../../../../shared/components/CustomerAppGrid/CustomerAppGrid', () => (
 }))
 
 describe('CustomerList', () => {
-    it('shows the empty state and lets the user add a customer', () => {
-        const onAddCustomer = vi.fn()
-
+    it('shows the admin empty state without a duplicate add action', () => {
         render(
             <CustomerList
                 customers={[]}
-                onAddCustomer={onAddCustomer}
                 onRefresh={vi.fn()}
                 canManageCustomers
             />,
         )
 
         expect(screen.getByText('No customers yet')).toBeInTheDocument()
-        fireEvent.click(screen.getByRole('button', { name: 'Add Customer' }))
-        expect(onAddCustomer).toHaveBeenCalledOnce()
+        expect(screen.getByText('Add your first customer to get started.'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Add Customer' }))
+            .not.toBeInTheDocument()
+    })
+
+    it('shows the user empty state without an add action', () => {
+        render(
+            <CustomerList
+                customers={[]}
+                onRefresh={vi.fn()}
+                canManageCustomers={false}
+            />,
+        )
+
+        expect(screen.getByText('No customers yet')).toBeInTheDocument()
+        expect(screen.getByText('There are currently no customers to display.'))
+            .toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: 'Add Customer' }))
+            .not.toBeInTheDocument()
     })
 
     it.each(['USER', 'ADMIN'] as const)(
@@ -42,7 +57,6 @@ describe('CustomerList', () => {
                     firstName: 'Ada',
                     lastName: 'Lovelace',
                 }]}
-                onAddCustomer={vi.fn()}
                 onRefresh={vi.fn()}
                 canManageCustomers={role === 'ADMIN'}
             />,

@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Close } from '@mui/icons-material'
 import {
   Alert,
   Box,
@@ -8,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   Stack,
   TextField,
   Typography,
@@ -100,11 +102,28 @@ function AddCustomerDialog({
       aria-labelledby={ADD_CUSTOMER_TITLE_ID}
       aria-describedby={ADD_CUSTOMER_DESCRIPTION_ID}
     >
-      <DialogTitle id={ADD_CUSTOMER_TITLE_ID}>
+      <DialogTitle
+        id={ADD_CUSTOMER_TITLE_ID}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          pr: 1.5,
+        }}
+      >
         {ADD_CUSTOMER_DIALOG_COPY.title}
+        <IconButton
+          aria-label="Close add customer"
+          onClick={handleClose}
+          disabled={isPending}
+          edge="end"
+          size="small"
+        >
+          <Close />
+        </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers>
+      <DialogContent dividers sx={{ pb: 4 }}>
         <Typography
           id={ADD_CUSTOMER_DESCRIPTION_ID}
           color="text.secondary"

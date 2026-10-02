@@ -1,25 +1,20 @@
 import { Refresh } from '@mui/icons-material'
 import {
-    Alert,
     Box,
     Button,
     Card,
     CardContent,
-    CircularProgress,
-    Dialog,
-    DialogContent,
-    DialogTitle,
     IconButton,
     Stack,
     Tooltip,
     Typography,
 } from '@mui/material'
 import type { ColDef, FilterChangedEvent, GridApi, ICellRendererParams } from 'ag-grid-community'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { getCustomerById } from '../../api/customerApi'
-import type { Customer, CustomerSummary } from '../../types/customer'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import type { CustomerSummary } from '../../types/customer'
 import CustomerAppGrid from '../../../../shared/components/CustomerAppGrid/CustomerAppGrid'
 import { CUSTOMER_PAGE_COPY } from '../../pages/CustomersPage/CustomersPage.constants'
+import CustomerDetailsDialog from '../CustomerDetailsDialog/CustomerDetailsDialog'
 import {
     CUSTOMER_COLUMN_DEFS,
     DEFAULT_ROWS_PER_PAGE,
@@ -29,23 +24,18 @@ import {
 
 interface CustomerListProps {
     customers: CustomerSummary[]
-    onAddCustomer: () => void
     onRefresh: () => void
     canManageCustomers: boolean
 }
 
 function CustomerList({
     customers,
-    onAddCustomer,
     onRefresh,
     canManageCustomers,
 }: CustomerListProps) {
     const gridApiRef = useRef<GridApi<CustomerSummary> | null>(null)
     const [hasActiveFilters, setHasActiveFilters] = useState(false)
     const [selectedCustomerId, setSelectedCustomerId] = useState<number | null>(null)
-    const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
-    const [isLoadingDetails, setIsLoadingDetails] = useState(false)
-    const [detailsError, setDetailsError] = useState<string | null>(null)
 
     const columnDefs = useMemo<ColDef<CustomerSummary>[]>(() => [
         ...CUSTOMER_COLUMN_DEFS,
@@ -65,36 +55,6 @@ function CustomerList({
                 ) : null,
         }] : []),
     ], [canManageCustomers])
-
-    useEffect(() => {
-        if (selectedCustomerId === null) {
-            return
-        }
-
-        const controller = new AbortController()
-        setSelectedCustomer(null)
-        setDetailsError(null)
-        setIsLoadingDetails(true)
-
-        getCustomerById(selectedCustomerId, controller.signal)
-            .then(setSelectedCustomer)
-            .catch((error: unknown) => {
-                if (!controller.signal.aborted) {
-                    setDetailsError(
-                        error instanceof Error
-                            ? error.message
-                            : 'Unable to load customer details.',
-                    )
-                }
-            })
-            .finally(() => {
-                if (!controller.signal.aborted) {
-                    setIsLoadingDetails(false)
-                }
-            })
-
-        return () => controller.abort()
-    }, [selectedCustomerId])
 
     const handleFilterChanged = useCallback(
         (event: FilterChangedEvent<CustomerSummary>) => {
@@ -121,17 +81,10 @@ function CustomerList({
                             color="text.secondary"
                             sx={{ mt: 1 }}
                         >
-                            {CUSTOMER_PAGE_COPY.emptyDescription}
+                            {canManageCustomers
+                                ? CUSTOMER_PAGE_COPY.emptyDescription
+                                : CUSTOMER_PAGE_COPY.emptyDescriptionForUser}
                         </Typography>
-                        {canManageCustomers && (
-                            <Button
-                                variant="contained"
-                                sx={{ mt: 3 }}
-                                onClick={onAddCustomer}
-                            >
-                                {CUSTOMER_PAGE_COPY.addCustomer}
-                            </Button>
-                        )}
                     </Box>
                 </CardContent>
             </Card>
@@ -189,31 +142,12 @@ function CustomerList({
                 }}
                 onFilterChanged={handleFilterChanged}
             />
-            <Dialog
-                open={selectedCustomerId !== null}
-                onClose={() => setSelectedCustomerId(null)}
-                fullWidth
-                maxWidth="sm"
-            >
-                <DialogTitle>Customer details</DialogTitle>
-                <DialogContent dividers>
-                    {isLoadingDetails && (
-                        <CircularProgress aria-label="Loading customer details" />
-                    )}
-                    {detailsError && <Alert severity="error">{detailsError}</Alert>}
-                    {selectedCustomer && (
-                        <Stack spacing={1}>
-                            <Typography>ID: {selectedCustomer.id}</Typography>
-                            <Typography>
-                                Name: {selectedCustomer.firstName} {selectedCustomer.lastName}
-                            </Typography>
-                            <Typography>
-                                Date of birth: {selectedCustomer.dateOfBirth}
-                            </Typography>
-                        </Stack>
-                    )}
-                </DialogContent>
-            </Dialog>
+            {selectedCustomerId !== null && (
+                <CustomerDetailsDialog
+                    customerId={selectedCustomerId}
+                    onClose={() => setSelectedCustomerId(null)}
+                />
+            )}
         </Card>
     )
 }

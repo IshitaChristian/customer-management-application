@@ -18,7 +18,7 @@ The Maven wrapper is included, so a separate Maven installation is not needed. N
 From the directory containing the shared `customer-management-app.bundle` file, run:
 
 ```sh
-git clone customer-management-app.bundle customer-management-application
+git clone ishita-christian-tech-test.bundle customer-management-application
 cd customer-management-application
 ```
 

@@ -31,6 +31,9 @@ export const DEFAULT_CUSTOMER_FORM_VALUES = {
     dateOfBirth: '',
 }
 
+const CUSTOMER_NAME_PATTERN =
+    /^\p{L}[\p{L}\p{M}]*(?:[ '\u2019-]\p{L}[\p{L}\p{M}]*)*$/u
+
 /** Mirrors backend field constraints so invalid customer data is caught early. */
 export const CREATE_CUSTOMER_SCHEMA = z.object({
     firstName: z
@@ -39,14 +42,22 @@ export const CREATE_CUSTOMER_SCHEMA = z.object({
         })
         .trim()
         .min(1, 'First name is required')
-        .max(50, 'First name must be 50 characters or fewer'),
+        .max(50, 'First name must be 50 characters or fewer')
+        .regex(
+            CUSTOMER_NAME_PATTERN,
+            'First name can only contain letters, spaces, apostrophes, and hyphens',
+        ),
     lastName: z
         .string({
             error: 'Last name is required',
         })
         .trim()
         .min(1, 'Last name is required')
-        .max(50, 'Last name must be 50 characters or fewer'),
+        .max(50, 'Last name must be 50 characters or fewer')
+        .regex(
+            CUSTOMER_NAME_PATTERN,
+            'Last name can only contain letters, spaces, apostrophes, and hyphens',
+        ),
     dateOfBirth: z
         .string({
             error: 'Date of birth is required',

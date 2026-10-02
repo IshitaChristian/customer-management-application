@@ -153,6 +153,26 @@ describe('AddCustomerDialog', () => {
     expect(onCreated).toHaveBeenCalledOnce()
   })
 
+  it.each([
+    ['First name', 'Jane1'],
+    ['First name', 'Jane!'],
+    ['Last name', 'Doe2'],
+    ['Last name', 'Doe@'],
+  ])('rejects numbers and punctuation in %s', async (label, value) => {
+    const user = userEvent.setup()
+    renderDialog()
+
+    await user.type(screen.getByLabelText(label), value)
+    await user.click(screen.getByRole('button', { name: 'Add customer' }))
+
+    expect(
+      screen.getByText(
+        `${label} can only contain letters, spaces, apostrophes, and hyphens`,
+      ),
+    ).toBeInTheDocument()
+    expect(mockCreateCustomer).not.toHaveBeenCalled()
+  })
+
   it('rejects a future date of birth', async () => {
     const user = userEvent.setup()
     renderDialog()

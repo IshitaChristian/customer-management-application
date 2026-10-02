@@ -36,6 +36,25 @@ describe('LoginPage', () => {
         expect(document.querySelector('input[type="password"]')).toBeRequired()
     })
 
+    it('blocks sign in when username and password are blank', async () => {
+        const user = userEvent.setup()
+        renderLoginPage()
+
+        await user.click(screen.getByRole('button', { name: 'Sign in' }))
+
+        expect(screen.getByText('Username is required')).toBeInTheDocument()
+        expect(screen.getByText('Password is required')).toBeInTheDocument()
+        expect(screen.getByRole('textbox', { name: 'Username' })).toHaveAttribute(
+            'aria-invalid',
+            'true',
+        )
+        expect(document.querySelector('input[type="password"]')).toHaveAttribute(
+            'aria-invalid',
+            'true',
+        )
+        expect(mockLogin).not.toHaveBeenCalled()
+    })
+
     it('logs in and navigates to customers on successful submission', async () => {
         const user = userEvent.setup()
         mockLogin.mockResolvedValue(undefined)

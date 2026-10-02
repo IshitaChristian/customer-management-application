@@ -25,9 +25,22 @@ function LoginPage() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [isPending, setIsPending] = useState(false)
+    const [validationErrors, setValidationErrors] = useState({
+        username: '',
+        password: '',
+    })
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault()
+        const nextValidationErrors = {
+            username: username.trim() ? '' : 'Username is required',
+            password: password ? '' : 'Password is required',
+        }
+        setValidationErrors(nextValidationErrors)
+        if (nextValidationErrors.username || nextValidationErrors.password) {
+            return
+        }
+
         setError('')
         setIsPending(true)
         try {
@@ -61,7 +74,12 @@ function LoginPage() {
                 sx={{ width: '100%', maxWidth: LOGIN_CARD_MAX_WIDTH }}
             >
                 <CardContent sx={{ p: 4 }}>
-                    <Stack spacing={3} component="form" onSubmit={handleSubmit}>
+                    <Stack
+                        spacing={3}
+                        component="form"
+                        onSubmit={handleSubmit}
+                        noValidate
+                    >
                         <Box>
                             <Typography variant="h5" sx={{ fontWeight: 700 }}>
                                 {LOGIN_PAGE_COPY.title}
@@ -75,17 +93,33 @@ function LoginPage() {
                             label={LOGIN_PAGE_COPY.username}
                             autoComplete="username"
                             value={username}
-                            onChange={(event) => setUsername(event.target.value)}
+                            onChange={(event) => {
+                                setUsername(event.target.value)
+                                setValidationErrors((current) => ({
+                                    ...current,
+                                    username: '',
+                                }))
+                            }}
                             required
                             autoFocus
+                            error={Boolean(validationErrors.username)}
+                            helperText={validationErrors.username}
                         />
                         <TextField
                             label={LOGIN_PAGE_COPY.password}
                             type="password"
                             autoComplete="current-password"
                             value={password}
-                            onChange={(event) => setPassword(event.target.value)}
+                            onChange={(event) => {
+                                setPassword(event.target.value)
+                                setValidationErrors((current) => ({
+                                    ...current,
+                                    password: '',
+                                }))
+                            }}
                             required
+                            error={Boolean(validationErrors.password)}
+                            helperText={validationErrors.password}
                         />
                         <Button
                             type="submit"

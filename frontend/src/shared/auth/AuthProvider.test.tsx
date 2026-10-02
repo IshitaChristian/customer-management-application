@@ -39,7 +39,6 @@ describe('AuthProvider', () => {
 
     it('shows recovery state for unexpected session-check failures', async () => {
         mockGetCurrentUser.mockRejectedValueOnce(new ApiError(503, 'Unavailable'))
-            .mockResolvedValueOnce({ username: 'admin', role: 'ADMIN' })
 
         const { result } = renderHook(() => useAuth(), {
             wrapper: AuthProvider,
@@ -48,15 +47,29 @@ describe('AuthProvider', () => {
         await waitFor(() => expect(result.current.authError).not.toBeNull())
         expect(result.current.user).toBeNull()
 
-        act(() => result.current.retryAuthenticationCheck())
+        let resolveRetry: (user: Awaited<ReturnType<typeof getCurrentUser>>) => void =
+            () => {}
+        mockGetCurrentUser.mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolveRetry = resolve
+            }),
+        )
 
-        await waitFor(() => {
-            expect(result.current.user).toEqual({
+        act(() => result.current.retryAuthenticationCheck())
+        expect(result.current.isLoading).toBe(true)
+
+        await act(async () => {
+            resolveRetry({
                 username: 'admin',
                 role: 'ADMIN',
             })
-            expect(result.current.authError).toBeNull()
         })
+        expect(result.current.isLoading).toBe(false)
+        expect(result.current.user).toEqual({
+            username: 'admin',
+            role: 'ADMIN',
+        })
+        expect(result.current.authError).toBeNull()
         expect(mockGetCurrentUser).toHaveBeenCalledTimes(2)
     })
 

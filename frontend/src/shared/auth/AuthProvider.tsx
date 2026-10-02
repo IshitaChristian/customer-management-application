@@ -20,18 +20,18 @@ const AUTHENTICATION_CHECK_ERROR =
 
 export function AuthProvider({ children }: { children: ReactNode }) {
     const [user, setUser] = useState<AuthenticatedUser | null>(null)
-    const [isLoading, setIsLoading] = useState(true)
     const [authError, setAuthError] = useState<string | null>(null)
     const [checkAttempt, setCheckAttempt] = useState(0)
+    const [completedCheckAttempt, setCompletedCheckAttempt] = useState<number | null>(null)
+    const isLoading = completedCheckAttempt !== checkAttempt
 
     useEffect(() => {
         let active = true
-        setIsLoading(true)
 
         const handleExpiredAuthentication = () => {
             setUser(null)
             setAuthError(null)
-            setIsLoading(false)
+            setCompletedCheckAttempt(checkAttempt)
         }
         window.addEventListener(
             AUTHENTICATION_EXPIRED_EVENT,
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 )
             })
             .finally(() => {
-                if (active) setIsLoading(false)
+                if (active) setCompletedCheckAttempt(checkAttempt)
             })
 
         return () => {

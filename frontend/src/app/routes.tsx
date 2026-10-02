@@ -20,17 +20,14 @@ function AppRoutes() {
         <Routes>
             <Route
                 path="/login"
-                element={user ? <Navigate to="/customers" replace /> : <LoginPage />}
-            />
+                element={user ? <Navigate to="/customers" replace /> : <LoginPage />}/>
             <Route element={<AppShell />}>
                 <Route
                     path="/"
-                    element={<Navigate to={user ? '/customers' : '/login'} replace />}
-                />
+                    element={<Navigate to={user ? '/customers' : '/login'} replace />}/>
                 <Route
                     path="/customers"
-                    element={user ? <CustomersPage /> : <Navigate to="/login" replace />}
-                />
+                    element={user ? <CustomersPage /> : <Navigate to="/login" replace />}/>
             </Route>
             <Route path="*" element={<Navigate to={user ? '/customers' : '/login'} replace />} />
         </Routes>

@@ -3,12 +3,8 @@ name: CI
 on:
   push:
     branches:
-      - main
-      - 'feature/**'
-
-  pull_request:
-    branches:
-      - main
+      - feature/customer_management_app
+  workflow_dispatch:
 
 jobs:
   backend:
@@ -27,14 +23,11 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
           cache: maven
 
-      - name: Run tests
-        run: ./mvnw test
-
-      - name: Build application
-        run: ./mvnw package -DskipTests
+      - name: Verify backend
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
 
   frontend:
     name: Frontend
@@ -61,5 +54,8 @@ jobs:
       - name: Run tests
         run: npm run test:run
 
-      - name: Build application
+      - name: Run lint
+        run: npm run lint
+
+      - name: Build frontend
         run: npm run build

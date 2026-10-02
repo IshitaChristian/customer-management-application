@@ -1,4 +1,7 @@
 spring:
+  # Default to the self-contained demo setup so assessors need no profile configuration.
+  profiles:
+    default: local
   application:
     name: customer-management-backend
   datasource:
